@@ -62,8 +62,10 @@ async def handle_faculty_choice(update: Update, context: ContextTypes.DEFAULT_TY
     context.user_data['directions_map'] = directions
 
     await update.message.reply_text(
-        f"🏛 {faculty_text}\n\n{get_text('choose_direction', context)}",
-        reply_markup=get_dynamic_keyboard(directions, context)
+        f"🏛 **{faculty_text}**\n{get_text('stats_divider', context)}\n\n"
+        f"📍 {get_text('choose_direction', context)}",
+        reply_markup=get_dynamic_keyboard(directions, context),
+        parse_mode='Markdown'
     )
 
 
@@ -110,8 +112,10 @@ async def handle_direction_choice(update: Update, context: ContextTypes.DEFAULT_
         # Oddiy fakultetlar uchun ta'lim turini so'raymiz
         context.user_data['state'] = 'choosing_education_type'
         await update.message.reply_text(
-           f"📘 {direction_text}\n\n{get_text('choose_edu_type', context)}",
-            reply_markup=get_education_type_keyboard(context)
+           f"📘 **{direction_text}**\n{get_text('stats_divider', context)}\n\n"
+           f"📍 {get_text('choose_edu_type', context)}",
+            reply_markup=get_education_type_keyboard(context),
+            parse_mode='Markdown'
         )
 
 # ============================
@@ -146,8 +150,10 @@ async def handle_education_type_choice(update: Update, context: ContextTypes.DEF
     context.user_data['state'] = 'choosing_education_lang'
 
     await update.message.reply_text(
-        f"🎓 {edu_type_text}\n\n{get_text('choose_edu_lang', context)}",
-        reply_markup=get_education_lang_keyboard(context)
+        f"🎓 **{edu_type_text}**\n{get_text('stats_divider', context)}\n\n"
+        f"📍 {get_text('choose_edu_lang', context)}",
+        reply_markup=get_education_lang_keyboard(context),
+        parse_mode='Markdown'
     )
 
 async def handle_education_lang_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -310,20 +316,25 @@ async def ask_complaint_message(update: Update, context: ContextTypes.DEFAULT_TY
     complaint_type_name = get_complaint_type_name(context.user_data['complaint_type'], context)
 
     text = (
-        f"📝 Murojaat ma'lumotlari:\n\n"
-        f"📋 Turi: {complaint_type_name}\n"
+        f"📝 **MUROJAAT MA'LUMOTLARI**\n"
+        f"{get_text('stats_divider', context)}\n\n"
+        f"🏛 **Fakultet:** `{faculty_name}`\n"
+        f"🎯 **Yo'nalish:** `{direction_name}`\n"
+        f"📚 **Kurs:** `{course_name}`\n"
+        f"📋 **Tur:** `{complaint_type_name}`\n"
     )
 
     if context.user_data['complaint_type'] == 'teacher':
-        text += f"📖 Fan: {context.user_data.get('subject_name', '')}\n"
-        text += f"👨‍🏫 O'qituvchi: {context.user_data.get('teacher_name', '')}\n"
+        text += f"📖 **Fan:** `{context.user_data.get('subject_name', '')}`\n"
+        text += f"👨‍🏫 **O'qituvchi:** `{context.user_data.get('teacher_name', '')}`\n"
 
     text += (
-        f"\n{get_text('anonymous_notice', context)}\n\n"
-        f"{get_text('enter_message', context)}"
+        f"\n{get_text('stats_divider', context)}\n"
+        f"{get_text('anonymous_notice', context)}\n\n"
+        f"📍 {get_text('enter_message', context)}"
     )
 
-    await update.message.reply_text(text, reply_markup=get_back_keyboard(context))
+    await update.message.reply_text(text, reply_markup=get_back_keyboard(context), parse_mode='Markdown')
 
 
 async def handle_complaint_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -338,7 +349,8 @@ async def handle_complaint_message(update: Update, context: ContextTypes.DEFAULT
         'education_type': context.user_data.get('education_type', ''),
         'education_language': context.user_data.get('education_language', ''),
         'complaint_type': context.user_data.get('complaint_type', ''),
-        'message': message_text
+        'message': message_text,
+        'source': 'bot'
     }
 
     if context.user_data.get('complaint_type') == 'teacher':
@@ -349,25 +361,17 @@ async def handle_complaint_message(update: Update, context: ContextTypes.DEFAULT
     save_complaint(complaint_data)
 
     # Tasdiqlash xabari
-    complaint_type_name = get_complaint_type_name(context.user_data.get('complaint_type', ''), context)
-
     confirmation_text = (
-        f"✅ Murojaatingiz qabul qilindi!\n\n"
-        f"📊 Ma'lumotlar:\n"
-        f"📋 Turi: {complaint_type_name}\n"
-    )
-
-    if context.user_data.get('complaint_type') == 'teacher':
-        confirmation_text += f"📖 Fan: {context.user_data.get('subject_name', '')}\n"
-        confirmation_text += f"👨‍🏫 O'qituvchi: {context.user_data.get('teacher_name', '')}\n"
-
-    confirmation_text += (
-        "\n" + get_text('complaint_accepted', context)
+        f"{get_text('complaint_accepted', context)}\n"
+        f"{get_text('stats_divider', context)}\n\n"
+        f"{get_text('complaint_success_footer', context)}\n\n"
+        f"🚀 _Rahmat!_"
     )
 
     await update.message.reply_text(
         confirmation_text,
-        reply_markup=get_main_menu_keyboard(context)
+        reply_markup=get_main_menu_keyboard(context),
+        parse_mode='Markdown'
     )
 
     # Contextni tozalash

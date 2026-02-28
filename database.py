@@ -3,6 +3,7 @@
 
 import sqlite3
 import logging
+import json
 from config.config import DATABASE_NAME
 
 logger = logging.getLogger(__name__)
@@ -128,22 +129,23 @@ def save_complaint(data):
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         uid,
-        data['faculty'],
-        data['direction'],
-        data['course'],
+        data.get('faculty'),
+        data.get('direction'),
+        data.get('course'),
         data.get('education_type', ''),
-        data.get('education_language', ''),
-        data['complaint_type'],
+        data.get('education_language', data.get('education_lang', '')),
+        data.get('complaint_type'),
         data.get('subject_name', ''),
         data.get('teacher_name', ''),
-        data['message'],
+        data.get('message'),
         data.get('source', 'bot'),
         'new'
     ))
 
     conn.commit()
     conn.close()
-    logger.info(f"Yangi murojaat saqlandi: {uid}")
+    logger.info(f"Yangi murojaat saqlandi ({data.get('source', 'bot')}): {uid}")
+    return uid
 
 
 def get_all_complaints(limit=None):
@@ -151,11 +153,11 @@ def get_all_complaints(limit=None):
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
 
-    query = 'SELECT * FROM complaints ORDER BY created_at ASC'
-    if limit:
-        query += f' LIMIT {limit}'
-
-    cursor.execute(query)
+    if limit and isinstance(limit, int):
+        cursor.execute('SELECT * FROM complaints ORDER BY created_at ASC LIMIT ?', (limit,))
+    else:
+        cursor.execute('SELECT * FROM complaints ORDER BY created_at ASC')
+    
     complaints = cursor.fetchall()
     conn.close()
 
@@ -167,7 +169,8 @@ def save_lesson_rating(data):
     cursor = conn.cursor()
 
     uid = generate_uid()
-    answers = data.get('answers', {})
+    # Handle both 'answers' (bot) and 'ratings' (webapp)
+    answers = data.get('answers', data.get('ratings', {}))
     
     # Fakultetni topish (Yo'nalish kodiga qarab)
     faculty_code = ""
@@ -182,8 +185,10 @@ def save_lesson_rating(data):
     scores = []
     for val in answers.values():
         try:
-            scores.append(float(val))
-        except: pass
+            if str(val).isdigit():
+                scores.append(float(val))
+        except (ValueError, TypeError):
+            pass
     total_score = round(sum(scores)/len(scores), 2) if scores else 0
 
     cursor.execute('''
@@ -221,15 +226,17 @@ def save_lesson_rating(data):
     logger.info(f"Yangi dars bahosi saqlandi (1-qator): {uid}")
     return uid
 
-def get_lesson_ratings(limit=None):
+def get_all_lesson_ratings(limit=None):
+    """Barcha dars baholarini olish"""
+    
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
 
-    query = "SELECT * FROM lesson_ratings ORDER BY created_at DESC"
-    if limit:
-        query += f" LIMIT {limit}"
-
-    cursor.execute(query)
+    if limit and isinstance(limit, int):
+        cursor.execute('SELECT * FROM lesson_ratings ORDER BY created_at DESC LIMIT ?', (limit,))
+    else:
+        cursor.execute('SELECT * FROM lesson_ratings ORDER BY created_at DESC')
+    
     records = cursor.fetchall()
     conn.close()
 
@@ -281,10 +288,14 @@ def get_statistics():
     cursor.execute("SELECT COUNT(*) FROM complaints WHERE created_at >= date('now', '-30 days')")
     stats['month'] = cursor.fetchone()[0]
 
-    # Eng ko'p yo'nalish
-    cursor.execute('SELECT direction, COUNT(*) FROM complaints GROUP BY direction ORDER BY COUNT(*) DESC LIMIT 1')
-    top = cursor.fetchone()
-    stats['top_direction'] = top if top else ('', 0)
+    # Eng faol yo'nalish
+    cursor.execute("SELECT direction, COUNT(*) as c FROM complaints GROUP BY direction ORDER BY c DESC LIMIT 1")
+    row = cursor.fetchone()
+    stats['top_direction'] = row if row else (None, 0)
+
+    # Hozirgi vaqt
+    from datetime import datetime
+    stats['now'] = datetime.now().strftime("%Y-%m-%d %H:%M")
 
     conn.close()
 

@@ -372,8 +372,7 @@ async def handle_add_direction_name(update: Update, context: ContextTypes.DEFAUL
     text = update.message.text
     
     if text == get_text('btn_back', context):
-        context.user_data['state'] = 'adding_direction_faculty'
-        return
+        return await handle_add_direction_code(update, context)
     
     code = context.user_data.get('new_direction_code')
     faculty_code = context.user_data.get('new_direction_faculty')

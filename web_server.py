@@ -9,6 +9,7 @@ from aiohttp.web import middleware
 import sqlite3
 
 from config.config import DATABASE_NAME
+from database import save_complaint, save_lesson_rating
 
 logger = logging.getLogger(__name__)
 
@@ -147,60 +148,10 @@ def get_complaint_types_from_db():
     return complaint_types
 
 
-def get_rating_questions_from_db():
-    """Baholash savollarini olish"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT question_number, translation_key, answer_type 
-        FROM rating_questions 
-        WHERE is_active = 1 
-        ORDER BY question_number
-    ''')
-    questions = [{
-        'number': row[0],
-        'translation_key': row[1],
-        'answer_type': row[2]
-    } for row in cursor.fetchall()]
-    conn.close()
-    return questions
+# This section (lines 150-177) is redundant as it's redefined better below
 
 
-def get_survey_links_from_db():
-    """So'rovnoma havolalarini olish"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT code, url FROM survey_links WHERE is_active = 1')
-    links = {row[0]: row[1] for row in cursor.fetchall()}
-    conn.close()
-    return links
-
-
-def save_rating_to_db(data):
-    """Baholashni saqlash"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    # Ma'lumotlarni lesson_ratings jadvaliga saqlash
-    # (Bu yerda jadval strukturasi botnikiga mos bo'lishi kerak)
-    cursor.execute('''
-        INSERT INTO lesson_ratings (
-            faculty, direction, course, education_type, education_lang,
-            ratings, comments, source
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (
-        data.get('faculty', ''),
-        data.get('direction', ''),
-        data.get('course', ''),
-        data.get('education_type', ''),
-        data.get('education_language', ''),
-        json.dumps(data.get('ratings', {})),
-        data.get('comment', ''),
-        'webapp'
-    ))
-    conn.commit()
-    rating_id = cursor.lastrowid
-    conn.close()
-    return rating_id
+# Removed local save_rating_to_db (replaced by database.save_lesson_rating)
 
 
 def get_rating_questions_from_db():
@@ -231,31 +182,7 @@ def get_survey_links_from_db():
     return surveys
 
 
-def save_complaint_to_db(data):
-    """Murojaatni saqlash"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO complaints (
-            faculty, direction, course, education_type, education_lang,
-            complaint_type, subject_name, teacher_name, message, source
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (
-        data.get('faculty', ''),
-        data.get('direction', ''),
-        data.get('course', ''),
-        data.get('education_type', ''),
-        data.get('education_language', ''),
-        data.get('complaint_type', ''),
-        data.get('subject_name', ''),
-        data.get('teacher_name', ''),
-        data.get('message', ''),
-        'webapp'  # Mini App dan kelgan deb belgilaymiz
-    ))
-    conn.commit()
-    complaint_id = cursor.lastrowid
-    conn.close()
-    return complaint_id
+# Removed local save_complaint_to_db (replaced by database.save_complaint)
 
 
 # ============================================
@@ -322,8 +249,9 @@ async def api_submit_rating(request):
     """Baholash yuborish"""
     try:
         data = await request.json()
-        rating_id = save_rating_to_db(data)
-        return web.json_response({'success': True, 'rating_id': rating_id})
+        data['source'] = 'webapp'
+        uid = save_lesson_rating(data)
+        return web.json_response({'success': True, 'uid': uid})
     except Exception as e:
         logger.error(f"Error submitting rating: {e}")
         return web.json_response({'success': False, 'error': str(e)}, status=500)
@@ -349,6 +277,7 @@ async def api_submit_complaint(request):
     """Murojaat yuborish"""
     try:
         data = await request.json()
+        data['source'] = 'webapp'
         
         # Validatsiya
         required_fields = ['faculty', 'direction', 'course', 'complaint_type', 'message']
@@ -359,11 +288,11 @@ async def api_submit_complaint(request):
                     status=400
                 )
         
-        complaint_id = save_complaint_to_db(data)
+        uid = save_complaint(data)
         
         return web.json_response({
             'success': True, 
-            'complaint_id': complaint_id,
+            'uid': uid,
             'message': 'Murojaat muvaffaqiyatli qabul qilindi!'
         })
     except Exception as e:
@@ -391,6 +320,11 @@ async def api_config(request):
         'courses': {
             'regular': get_courses_from_db('regular'),
             'magistr': get_courses_from_db('magistr')
+        },
+        'pdf_files': {
+            'grading': 'media/baholash_jarayoni.pdf',
+            'exam': 'media/imtihon_jarayoni.pdf',
+            'rules': 'media/tartib_qoidalari.pdf'
         }
     }
     
@@ -547,6 +481,12 @@ def create_webapp_server():
         
         # Barcha fayllarni birinchi darajadan serve qilish
         app.router.add_static('/static', webapp_path, name='static_root')
+        
+        # Media folderini serve qilish (PDFlar uchun)
+        media_path = os.path.join(base_dir, 'media')
+        if os.path.exists(media_path):
+            app.router.add_static('/media', media_path)
+            logger.info(f"Registered static: /media -> {media_path}")
     
     return app
 

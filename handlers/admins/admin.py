@@ -43,36 +43,61 @@ async def show_export_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+def generate_progress_bar(count, total, length=10):
+    """Matnli progress bar yaratish"""
+    if total == 0: return "░" * length
+    filled_len = int(round(length * count / float(total)))
+    per = round(100.0 * count / float(total), 1)
+    bar = '█' * filled_len + '░' * (length - filled_len)
+    return f"`{bar}` {per}%"
+
 async def show_statistics(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Statistikalarni ko'rsatish"""
+    """Statistikalarni professional ko'rinishda ko'rsatish"""
     if not is_admin(update.effective_user.id):
         await update.message.reply_text(get_text('no_permission', context))
         return
 
     stats = get_statistics()
-
-    stats_text = get_text('stats_title', context).format(total=stats['total'])
+    total = stats['total']
     
-    stats_text += get_text('stats_by_direction', context) + "\n"
-    for direction, count in stats['by_direction']:
-        stats_text += f"  • {get_direction_name(direction, context)}: {count} ta\n"
+    # Header
+    stats_text = f"{get_text('stats_header_main', context)}\n"
+    stats_text += f"{get_text('stats_divider', context)}\n\n"
+    stats_text += f"{get_text('stats_total_line', context).format(total=total)}\n"
 
-    stats_text += get_text('stats_by_type', context) + "\n"
-    for complaint_type, count in stats['by_type']:
-        stats_text += f"  • {get_complaint_type_name(complaint_type, context)}: {count} ta\n"
+    # Directions
+    if stats['by_direction']:
+        stats_text += f"{get_text('stats_header_directions', context)}\n"
+        for direction, count in stats['by_direction']:
+            bar = generate_progress_bar(count, total)
+            stats_text += f"• *{get_direction_name(direction, context)}*\n  {bar} `{count}` ta\n"
 
-    stats_text += get_text('stats_by_course', context) + "\n"
-    for course, count in stats['by_course']:
-        stats_text += f"  • {get_course_name(course, context)}: {count} ta\n"
+    # Types
+    if stats['by_type']:
+        stats_text += f"{get_text('stats_header_types', context)}\n"
+        for complaint_type, count in stats['by_type']:
+            bar = generate_progress_bar(count, total)
+            stats_text += f"• *{get_complaint_type_name(complaint_type, context)}*\n  {bar} `{count}` ta\n"
 
-    stats_text += get_text('stats_weekly', context) + "\n"
+    # Courses
+    if stats['by_course']:
+        stats_text += f"{get_text('stats_header_courses', context)}\n"
+        for course, count in stats['by_course']:
+            bar = generate_progress_bar(count, total)
+            stats_text += f"• *{get_course_name(course, context)}*\n  {bar} `{count}` ta\n"
+
+    # Weekly
+    stats_text += f"{get_text('stats_header_weekly', context)}\n"
     if stats['weekly']:
         for date_str, count in stats['weekly']:
-            stats_text += f"  • {date_str}: {count} ta\n"
+            stats_text += f"🗓 `{date_str}`: *{count} ta*\n"
     else:
-        stats_text += get_text('no_data', context) + "\n"
+        stats_text += f"  {get_text('no_data', context)}\n"
 
-    await update.message.reply_text(stats_text)
+    stats_text += f"\n{get_text('stats_divider', context)}\n"
+    stats_text += f"✨ _Hisobot vaqti: {stats.get('now', 'Hozir')}_"
+
+    await update.message.reply_text(stats_text, parse_mode='Markdown')
 
 
 async def view_complaints(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -163,23 +188,25 @@ async def export_to_daily_lesson_excel_handler(update: Update, context: ContextT
 
 
 async def show_dashboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Dashboard ko'rsatish"""
+    """Dashboardni professional ko'rinishda ko'rsatish"""
     if not is_admin(update.effective_user.id):
         await update.message.reply_text(get_text('no_permission', context))
         return
 
     stats = get_statistics()
 
-    dashboard_text = get_text('dashboard_title', context).format(
-        today=stats['today'],
-        week=stats['week'],
-        month=stats['month']
-    )
+    dashboard_text = f"📈 **AKADEMIYA MONITORING DASHBOARD** 📈\n"
+    dashboard_text += f"{get_text('stats_divider', context)}\n\n"
+    
+    dashboard_text += f"📅 **BUGUN:** `{stats['today']}` ta\n"
+    dashboard_text += f"🗓 **SHU HAFTA:** `{stats['week']}` ta\n"
+    dashboard_text += f"📅 **SHU OY:** `{stats['month']}` ta\n\n"
 
-    if stats['top_direction'][0]:
-        dashboard_text += get_text('dashboard_top_direction', context).format(
-            direction=get_direction_name(stats['top_direction'][0], context),
-            count=stats['top_direction'][1]
-        )
+    if stats['top_direction'] and stats['top_direction'][0]:
+        dashboard_text += f"🏆 **ENG FAOL YO'NALISH:**\n"
+        dashboard_text += f"✨ {get_direction_name(stats['top_direction'][0], context)} (`{stats['top_direction'][1]}` ta)\n"
 
-    await update.message.reply_text(dashboard_text)
+    dashboard_text += f"\n{get_text('stats_divider', context)}\n"
+    dashboard_text += f"🚀 _Tizim barqaror ishlamoqda_"
+
+    await update.message.reply_text(dashboard_text, parse_mode='Markdown')

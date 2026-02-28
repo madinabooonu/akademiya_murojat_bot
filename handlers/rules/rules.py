@@ -14,8 +14,10 @@ async def show_rules_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['state'] = 'rules_main'
 
     await update.message.reply_text(
-        get_text('rules_main', context),
-        reply_markup=get_rules_keyboard(context)
+        f"📋 **{get_text('rules_main', context)}**\n"
+        f"{get_text('stats_divider', context)}",
+        reply_markup=get_rules_keyboard(context),
+        parse_mode='Markdown'
     )
 
 
@@ -66,7 +68,12 @@ async def download_pdf(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(get_text('error_no_rules_type', context))
         return
 
-    pdf_path = PDF_FILES.get(pdf_type, 'document.pdf')
+    pdf_path = PDF_FILES.get(pdf_type)
+    
+    if not pdf_path:
+        # Fallback to general rules if still somehow missing
+        from config.config import BASE_DIR
+        pdf_path = os.path.join(BASE_DIR, 'media', 'tartib_qoidalari.pdf')
 
     if os.path.exists(pdf_path):
         with open(pdf_path, 'rb') as pdf_file:
@@ -76,4 +83,6 @@ async def download_pdf(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 caption=get_text('btn_download_pdf', context)
             )
     else:
+        import logging
+        logging.getLogger(__name__).error(f"Rule PDF not found: {pdf_path}")
         await update.message.reply_text(get_text('error_pdf_not_found', context))

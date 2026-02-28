@@ -13,8 +13,10 @@ async def show_survey_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['state'] = 'survey_main'
 
     await update.message.reply_text(
-        get_text('survey_main', context),
-        reply_markup=get_survey_keyboard(context)
+        f"📊 **{get_text('survey_main', context)}**\n"
+        f"{get_text('stats_divider', context)}",
+        reply_markup=get_survey_keyboard(context),
+        parse_mode='Markdown'
     )
 
 

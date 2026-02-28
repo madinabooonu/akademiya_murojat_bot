@@ -23,6 +23,9 @@ def get_language_keyboard():
 
 def get_main_menu_keyboard(context, webapp_url=None):
     """Asosiy menyu klaviaturasi (Dinamik, 2 tugma bir qator)"""
+    from config.config import WEBAPP_URL as DEFAULT_URL
+    url = webapp_url or DEFAULT_URL
+    
     buttons = [
         get_text('btn_complaint', context),
         get_text('btn_rules', context),
@@ -32,7 +35,7 @@ def get_main_menu_keyboard(context, webapp_url=None):
         get_text('btn_lang', context)
     ]
 
-    if webapp_url:
+    if url:
         buttons.insert(0, "🌐 Mini App")
 
     keyboard = []
@@ -228,10 +231,23 @@ def get_export_menu_keyboard(context):
 
 
 def get_yes_no_keyboard(context):
-    return ReplyKeyboardMarkup([[
-        KeyboardButton(get_text('btn_yes', context)),
-        KeyboardButton(get_text('btn_no', context))
-    ]], resize_keyboard=True)
+    return ReplyKeyboardMarkup([
+        [
+            KeyboardButton(get_text('btn_yes', context)),
+            KeyboardButton(get_text('btn_no', context))
+        ],
+        [KeyboardButton(get_text('btn_back', context))]
+    ], resize_keyboard=True)
+
+
+def get_rating_keyboard(context):
+    """0-5 ball klaviaturasi"""
+    keyboard = [
+        [KeyboardButton("0"), KeyboardButton("1"), KeyboardButton("2")],
+        [KeyboardButton("3"), KeyboardButton("4"), KeyboardButton("5")],
+        [KeyboardButton(get_text('btn_back', context))]
+    ]
+    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
 
 def get_back_keyboard(context):

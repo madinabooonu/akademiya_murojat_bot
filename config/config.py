@@ -135,9 +135,10 @@ SURVEY_LINKS = {
     'employers': "https://docs.google.com/forms/d/e/1FAIpQLSdEXAMPLE2/viewform?usp=dialog"
 }
 
-# PDF fayllar
+# PDF fayllar (Mutloq yo'l bilan)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PDF_FILES = {
-    'grading': 'baholash_jarayoni.pdf',
-    'exam': 'imtihon_jarayoni.pdf',
-    'rules': 'tartib_qoidalari.pdf'
+    'grading': os.path.join(BASE_DIR, 'media', 'baholash_jarayoni.pdf'),
+    'exam': os.path.join(BASE_DIR, 'media', 'imtihon_jarayoni.pdf'),
+    'rules': os.path.join(BASE_DIR, 'media', 'tartib_qoidalari.pdf')
 }

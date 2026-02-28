@@ -525,7 +525,8 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # Tartib qoidalar
-    if state in ['rules_main', 'rules_grading', 'rules_exam', 'rules_general']:
+    rules_states = ['rules_main', 'rules_grading', 'rules_exam', 'rules_general']
+    if state in rules_states or text in [get_text('btn_grading', context), get_text('btn_exam', context), get_text('btn_general', context)]:
         await handle_rules_flow(update, context)
         return
 

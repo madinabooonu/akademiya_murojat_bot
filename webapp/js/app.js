@@ -493,9 +493,9 @@ function renderRatingQuestions(container) {
         qDiv.innerHTML = `<p class="font-bold text-sm text-slate-500 uppercase tracking-widest">${t(q.translation_key)}</p>`;
 
         const grid = document.createElement('div');
-        grid.className = 'grid grid-cols-5 gap-3';
+        grid.className = 'grid grid-cols-6 gap-2';
 
-        for (let i = 1; i <= 5; i++) {
+        for (let i = 0; i <= 5; i++) {
             const btn = document.createElement('button');
             btn.className = 'h-14 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 font-black text-lg transition-all active:scale-90';
             btn.textContent = i;
@@ -598,7 +598,7 @@ function renderRulesList() {
     const container = document.getElementById('rulesList');
     container.innerHTML = '';
     const rules = [
-        { id: 'general', title: 'btn_general', icon: 'info' },
+        { id: 'rules', title: 'btn_general', icon: 'info' },
         { id: 'grading', title: 'btn_grading', icon: 'award' },
         { id: 'exam', title: 'btn_exam', icon: 'file-text' }
     ];
@@ -613,9 +613,20 @@ function openRuleDetail(id) {
     const content = document.getElementById('modalContent');
     const text = t(`rules_${id}_text`) || t(`btn_${id}`) || 'Yaqinda qo\'shiladi...';
 
+    const pdfPath = state.config.pdf_files?.[id];
+    let pdfBtn = '';
+    if (pdfPath) {
+        pdfBtn = `
+            <button onclick="tg.openLink('${API_BASE}/${pdfPath}')" class="btn-pro w-full mt-8 flex items-center justify-center gap-3">
+                <i data-lucide="file-text" class="w-6 h-6"></i>
+                PDF ni ko'rish
+            </button>
+        `;
+    }
+
     content.innerHTML = `
         <div class="flex items-center justify-between mb-8">
-            <h2 class="text-2xl font-black">${t(`btn_rules_${id}`)}</h2>
+            <h2 class="text-2xl font-black">${t(`btn_${id}`)}</h2>
             <button onclick="closeModal()" class="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-white/5 flex items-center justify-center">
                 <i data-lucide="x" class="w-6 h-6"></i>
             </button>
@@ -623,6 +634,7 @@ function openRuleDetail(id) {
         <div class="prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-400 font-medium leading-[1.8]">
             ${text.split('\n').map(p => `<p class="mb-4">${p}</p>`).join('')}
         </div>
+        ${pdfBtn}
     `;
     openModal();
 }
@@ -647,18 +659,138 @@ function renderSurveyList() {
 /**
  * ADMIN DASHBOARD
  */
+/**
+ * ADMIN DASHBOARD - ULTIMATE EDITION
+ */
+let weeklyChartInstance = null;
+let typeChartInstance = null;
+
 async function fetchAdminDashboard() {
-    // Already implemented as mock/placeholder, enhancing with animation
     try {
-        const resp = await fetch(`${API_BASE}/api/admin/dashboard`);
+        const resp = await fetch(`${API_BASE}/api/admin/stats`);
         const stats = await resp.json();
 
+        // 1. Text Stats
         animateCount('statsToday', stats.today || 0);
         animateCount('statsWeek', stats.week || 0);
         animateCount('statsMonth', stats.month || 0);
+
+        // 2. Weekly Activity Chart
+        updateWeeklyChart(stats.weekly || []);
+
+        // 3. Complaint Type Distribution
+        updateTypeChart(stats.by_type || []);
+
+        // 4. Top Direction Highlight
+        if (stats.top_direction && stats.top_direction[0]) {
+            const topDirNameEl = document.getElementById('topDirectionName');
+            const topDirCard = document.getElementById('topDirectionCard');
+            if (topDirNameEl && topDirCard) {
+                topDirNameEl.textContent = getTranslateName(stats.top_direction[0]);
+                gsap.to(topDirCard, { opacity: 1, y: 0, duration: 0.6, delay: 0.5 });
+            }
+        }
     } catch (err) {
         console.error('Admin Fetch Error', err);
     }
+}
+
+function getTranslateName(code) {
+    // Search in all directions and complaint types for the key
+    const allMapping = {
+        ...(state.config.directions || []).reduce((acc, d) => ({ ...acc, [d.code]: d.translation_key }), {}),
+        ...(state.config.complaint_types || []).reduce((acc, c) => ({ ...acc, [c.code]: c.translation_key }), {}),
+        ...(state.config.faculties || []).reduce((acc, f) => ({ ...acc, [f.code]: f.translation_key }), {})
+    };
+    const key = allMapping[code];
+    return key ? t(key) : code;
+}
+
+function updateWeeklyChart(data) {
+    const ctx = document.getElementById('weeklyChart');
+    if (!ctx) return;
+
+    const labels = data.map(item => item[0]);
+    const counts = data.map(item => item[1]);
+
+    if (weeklyChartInstance) weeklyChartInstance.destroy();
+
+    const isDark = document.documentElement.classList.contains('dark');
+
+    weeklyChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Murojaatlar',
+                data: counts,
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                borderWidth: 4,
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#6366f1',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { weight: 'bold' } }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                    ticks: { color: isDark ? '#94a3b8' : '#64748b', stepSize: 1 }
+                }
+            }
+        }
+    });
+}
+
+function updateTypeChart(data) {
+    const ctx = document.getElementById('typeChart');
+    if (!ctx) return;
+
+    const labels = data.map(item => getTranslateName(item[0]));
+    const counts = data.map(item => item[1]);
+
+    if (typeChartInstance) typeChartInstance.destroy();
+
+    typeChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: counts,
+                backgroundColor: ['#6366f1', '#a855f7', '#ec4899', '#f59e0b', '#10b981'],
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '75%',
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        color: document.documentElement.classList.contains('dark') ? '#94a3b8' : '#64748b',
+                        font: { weight: 'bold', size: 10 },
+                        padding: 20
+                    }
+                }
+            }
+        }
+    });
 }
 
 function animateCount(id, value) {
