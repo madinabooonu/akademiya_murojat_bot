@@ -387,61 +387,145 @@
         <section id="adminDashboardView" class="view space-y-8">
             <div class="flex items-center justify-between">
                 <h2 class="text-3xl font-black tracking-tight" data-i18n="btn_admin">Admin</h2>
-                <div class="px-3 py-1 bg-primary/10 rounded-full text-[10px] font-black text-primary uppercase">
+                <div class="px-3 py-1 bg-primary/10 rounded-full text-[10px] font-black text-primary uppercase"
+                    data-i18n="label_moderator">
                     Moderator</div>
             </div>
 
-            <div class="grid grid-cols-3 gap-4">
-                <div class="card-pro p-5 text-center bg-gradient-to-br from-indigo-500/5 to-transparent">
-                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1"
-                        data-i18n="stats_today">Bugun</p>
-                    <p id="statsToday" class="text-3xl font-black text-indigo-500">0</p>
+            <!-- ULTIMATE PRO HEADER: Circular Gauges -->
+            <div class="grid grid-cols-4 gap-3">
+                <div
+                    class="card-pro p-3 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-primary/5 to-transparent border-primary/10">
+                    <div class="relative w-14 h-14">
+                        <canvas id="gaugeToday"></canvas>
+                        <div class="absolute inset-0 flex items-center justify-center text-[10px] font-black pointer-events-none"
+                            id="gaugeTodayVal">0%</div>
+                    </div>
+                    <p class="text-[8px] font-black uppercase tracking-tighter text-slate-400" data-i18n="stats_today">
+                        Bugun</p>
                 </div>
-                <div class="card-pro p-5 text-center bg-gradient-to-br from-purple-500/5 to-transparent">
-                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1"
-                        data-i18n="stats_week">Hafta</p>
-                    <p id="statsWeek" class="text-3xl font-black text-purple-500">0</p>
+                <div
+                    class="card-pro p-3 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-secondary/5 to-transparent border-secondary/10">
+                    <div class="relative w-14 h-14">
+                        <canvas id="gaugeWeek"></canvas>
+                        <div class="absolute inset-0 flex items-center justify-center text-[10px] font-black pointer-events-none"
+                            id="gaugeWeekVal">0%</div>
+                    </div>
+                    <p class="text-[8px] font-black uppercase tracking-tighter text-slate-400" data-i18n="stats_week">
+                        Hafta</p>
                 </div>
-                <div class="card-pro p-5 text-center bg-gradient-to-br from-pink-500/5 to-transparent">
-                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1"
-                        data-i18n="stats_month">Oy</p>
-                    <p id="statsMonth" class="text-3xl font-black text-pink-500">0</p>
+                <div
+                    class="card-pro p-3 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-accent/5 to-transparent border-accent/10">
+                    <div class="relative w-14 h-14">
+                        <canvas id="gaugeMonth"></canvas>
+                        <div class="absolute inset-0 flex items-center justify-center text-[10px] font-black pointer-events-none"
+                            id="gaugeMonthVal">0%</div>
+                    </div>
+                    <p class="text-[8px] font-black uppercase tracking-tighter text-slate-400" data-i18n="stats_month">
+                        Oy</p>
+                </div>
+                <div
+                    class="card-pro p-3 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-emerald-500/5 to-transparent border-emerald-500/10">
+                    <div class="relative w-14 h-14">
+                        <canvas id="gaugeTotal"></canvas>
+                        <div class="absolute inset-0 flex items-center justify-center text-[10px] font-black pointer-events-none"
+                            id="gaugeTotalVal">100%</div>
+                    </div>
+                    <p class="text-[8px] font-black uppercase tracking-tighter text-slate-400" data-i18n="label_total">
+                        Total</p>
                 </div>
             </div>
 
-            <!-- Visual Charts -->
-            <div class="space-y-6">
-                <!-- Weekly Chart -->
-                <div class="card-pro p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-xs font-black text-slate-500 uppercase tracking-[0.2em]" data-i18n="weekly_activity">Haftalik faollik</h3>
-                        <div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+            <!-- MAIN TREND: Area Chart -->
+            <div class="card-pro p-6 overflow-hidden relative group">
+                <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <i data-lucide="line-chart" class="w-20 h-20"></i>
+                </div>
+                <div class="flex items-center justify-between mb-8">
+                    <div class="space-y-1">
+                        <h3 class="text-xs font-black text-slate-500 uppercase tracking-[0.2em]"
+                            data-i18n="weekly_activity">Haftalik faollik</h3>
+                        <p class="text-2xl font-black tracking-tight"><span id="statsTotalDisplay">0</span> <span
+                                class="text-[10px] font-bold text-slate-400 uppercase ml-2"
+                                data-i18n="label_complaints">Murojaatlar</span></p>
                     </div>
-                    <div class="h-64 w-full">
-                        <canvas id="weeklyChart"></canvas>
+                    <div class="flex gap-2">
+                        <div class="w-2 h-2 rounded-full bg-primary animate-ping"></div>
+                        <div class="w-2 h-2 rounded-full bg-primary"></div>
+                    </div>
+                </div>
+                <div class="h-64 w-full">
+                    <canvas id="weeklyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- DISTRIBUTION GRID -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Type Distribution -->
+                <div class="card-pro p-6 flex flex-col">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xs font-black text-slate-500 uppercase tracking-[0.2em]"
+                            data-i18n="complaint_types_stats">Murojaat turlari</h3>
+                        <div class="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl">
+                            <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-500"></i>
+                        </div>
+                    </div>
+                    <div class="h-56 flex items-center justify-center">
+                        <canvas id="typeChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Type Distribution -->
-                <div class="grid grid-cols-1 gap-6">
-                    <div class="card-pro p-6">
-                        <h3 class="text-xs font-black text-slate-500 uppercase tracking-[0.2em] mb-6" data-i18n="complaint_types_stats">Murojaat turlari</h3>
-                        <div class="h-48 flex items-center justify-center">
-                            <canvas id="typeChart"></canvas>
+                <!-- Direction Distribution -->
+                <div class="card-pro p-6 flex flex-col">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xs font-black text-slate-500 uppercase tracking-[0.2em]"
+                            data-i18n="stats_by_direction_title">Yo'nalishlar tahlili</h3>
+                        <div class="p-2 bg-purple-50 dark:bg-purple-500/10 rounded-xl">
+                            <i data-lucide="bar-chart-horizontal" class="w-4 h-4 text-purple-500"></i>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Top Highlight -->
-                <div id="topDirectionCard" class="card-pro bg-primary text-white p-6 flex items-center justify-between opacity-0 translate-y-4">
-                    <div class="space-y-1">
-                        <p class="text-[10px] font-black uppercase tracking-widest opacity-80" data-i18n="most_active_dir">Eng faol yo'nalish</p>
-                        <p id="topDirectionName" class="text-xl font-black italic">--</p>
-                    </div>
-                    <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-                        <i data-lucide="trending-up" class="w-6 h-6"></i>
+                    <div class="h-56 flex items-center justify-center">
+                        <canvas id="directionChart"></canvas>
                     </div>
                 </div>
+            </div>
+
+            <!-- COURSE ANALYSIS -->
+            <div class="card-pro p-6 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-8 bg-gradient-to-b from-secondary to-accent rounded-full"></div>
+                        <div>
+                            <h3 class="text-xs font-black text-slate-500 uppercase tracking-[0.2em]"
+                                data-i18n="stats_by_course_title">Kurslar kesimida</h3>
+                            <p class="text-[9px] font-bold text-slate-400 mt-0.5" data-i18n="segment_distribution">
+                                Segmentlar bo'yicha taqsimot</p>
+                        </div>
+                    </div>
+                    <div id="topDirectionCard"
+                        class="px-4 py-2 bg-primary/10 rounded-2xl flex items-center gap-3 opacity-0">
+                        <i data-lucide="zap" class="w-4 h-4 text-primary"></i>
+                        <p id="topDirectionName"
+                            class="text-[10px] font-black italic text-primary uppercase tracking-tight">--</p>
+                    </div>
+                </div>
+                <div class="h-72 w-full">
+                    <canvas id="courseChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Highlight -->
+            <div id="topDirectionCard"
+                class="card-pro bg-primary text-white p-6 flex items-center justify-between opacity-0 translate-y-4">
+                <div class="space-y-1">
+                    <p class="text-[10px] font-black uppercase tracking-widest opacity-80" data-i18n="most_active_dir">
+                        Eng faol yo'nalish</p>
+                    <p id="topDirectionName" class="text-xl font-black italic">--</p>
+                </div>
+                <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                    <i data-lucide="trending-up" class="w-6 h-6"></i>
+                </div>
+            </div>
             </div>
 
             <div class="space-y-4">

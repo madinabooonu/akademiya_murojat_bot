@@ -379,6 +379,15 @@ def get_admin_ids():
     return admin_ids
 
 
+def trigger_cache_reload():
+    """Keshni yangilashni bildirish (utils orqali)"""
+    try:
+        import utils.utils as utils
+        utils.load_translations_to_cache()
+    except Exception:
+        pass
+
+
 def add_admin(telegram_id, name=""):
     """Yangi admin qo'shish"""
     conn = sqlite3.connect(DATABASE_NAME)
@@ -393,6 +402,7 @@ def add_admin(telegram_id, name=""):
     except sqlite3.IntegrityError:
         result = False
     conn.close()
+    if result: trigger_cache_reload()
     return result
 
 
@@ -404,6 +414,7 @@ def remove_admin(telegram_id):
     affected = cursor.rowcount
     conn.commit()
     conn.close()
+    if affected > 0: trigger_cache_reload()
     return affected > 0
 
 
@@ -417,6 +428,7 @@ def toggle_admin_status(telegram_id):
     ''', (telegram_id,))
     conn.commit()
     conn.close()
+    trigger_cache_reload()
 
 
 # ============================================
@@ -481,6 +493,7 @@ def add_faculty(code, translation_key, sort_order=0):
     except sqlite3.IntegrityError:
         result = False
     conn.close()
+    if result: trigger_cache_reload()
     return result
 
 
@@ -506,6 +519,7 @@ def update_faculty(code, translation_key=None, sort_order=None, is_active=None):
         values.append(code)
         cursor.execute(f'UPDATE faculties SET {", ".join(updates)} WHERE code = ?', values)
         conn.commit()
+        trigger_cache_reload()
     
     conn.close()
 
@@ -518,6 +532,7 @@ def delete_faculty(code):
     affected = cursor.rowcount
     conn.commit()
     conn.close()
+    if affected > 0: trigger_cache_reload()
     return affected > 0
 
 
@@ -563,6 +578,7 @@ def add_direction(code, faculty_code, translation_key, sort_order=0):
     except sqlite3.IntegrityError:
         result = False
     conn.close()
+    if result: trigger_cache_reload()
     return result
 
 
@@ -591,6 +607,7 @@ def update_direction(code, faculty_code=None, translation_key=None, sort_order=N
         values.append(code)
         cursor.execute(f'UPDATE directions SET {", ".join(updates)} WHERE code = ?', values)
         conn.commit()
+        trigger_cache_reload()
     
     conn.close()
 
@@ -603,6 +620,7 @@ def delete_direction(code):
     affected = cursor.rowcount
     conn.commit()
     conn.close()
+    if affected > 0: trigger_cache_reload()
     return affected > 0
 
 
@@ -730,6 +748,7 @@ def add_rating_question(question_number, translation_key, answer_type='scale'):
     ''', (question_number, translation_key, answer_type))
     conn.commit()
     conn.close()
+    trigger_cache_reload()
 
 
 def update_rating_question(question_number, translation_key=None, answer_type=None, is_active=None):
@@ -754,6 +773,7 @@ def update_rating_question(question_number, translation_key=None, answer_type=No
         values.append(question_number)
         cursor.execute(f'UPDATE rating_questions SET {", ".join(updates)} WHERE question_number = ?', values)
         conn.commit()
+        trigger_cache_reload()
     
     conn.close()
 
@@ -766,6 +786,7 @@ def delete_rating_question(question_number):
     affected = cursor.rowcount
     conn.commit()
     conn.close()
+    if affected > 0: trigger_cache_reload()
     return affected > 0
 
 
@@ -790,6 +811,7 @@ def update_survey_link(code, url):
     cursor.execute('UPDATE survey_links SET url = ? WHERE code = ?', (url, code))
     conn.commit()
     conn.close()
+    trigger_cache_reload()
 
 
 # ============================================
@@ -823,7 +845,7 @@ def get_all_translations(lang_code):
 
 
 def update_translation(key, lang_code, value):
-    """Tarjimani yangilash"""
+    """Tarjimani yangilash va keshni yangilash"""
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
     cursor.execute('''
@@ -831,7 +853,9 @@ def update_translation(key, lang_code, value):
         VALUES (?, ?, ?)
     ''', (lang_code, key, value))
     conn.commit()
+    conn.commit()
     conn.close()
+    trigger_cache_reload()
 
 
 def add_translation(key, lang_code, value):

@@ -8,14 +8,7 @@ from keyboards.keyboards import (
     get_yes_no_keyboard,
     get_rating_keyboard
 )
-from utils.utils import (
-    get_direction_code,
-    get_course_code,
-    get_text,
-    get_code_by_text,
-    get_all_directions,
-    get_courses
-)
+import utils.utils as utils
 from config.config import ALL_DIRECTIONS, COURSES, FACULTIES
 from database import save_lesson_rating
 
@@ -29,7 +22,7 @@ def get_questions(context):
         result = []
         for question_number, translation_key, answer_type in questions:
             result.append({
-                'text': get_text(translation_key, context),
+                'text': utils.get_text(translation_key, context),
                 'type': answer_type,
                 'number': question_number
             })
@@ -37,12 +30,12 @@ def get_questions(context):
     except Exception:
         # Fallback - eski usul
         return [
-            {'text': get_text('rating_q1', context), 'type': 'scale', 'number': 1},
-            {'text': get_text('rating_q2', context), 'type': 'scale', 'number': 2},
-            {'text': get_text('rating_q3', context), 'type': 'scale', 'number': 3},
-            {'text': get_text('rating_q4', context), 'type': 'scale', 'number': 4},
-            {'text': get_text('rating_q5', context), 'type': 'scale', 'number': 5},
-            {'text': get_text('rating_q6', context), 'type': 'yes_no', 'number': 6},
+            {'text': utils.get_text('rating_q1', context), 'type': 'scale', 'number': 1},
+            {'text': utils.get_text('rating_q2', context), 'type': 'scale', 'number': 2},
+            {'text': utils.get_text('rating_q3', context), 'type': 'scale', 'number': 3},
+            {'text': utils.get_text('rating_q4', context), 'type': 'scale', 'number': 4},
+            {'text': utils.get_text('rating_q5', context), 'type': 'scale', 'number': 5},
+            {'text': utils.get_text('rating_q6', context), 'type': 'yes_no', 'number': 6},
         ]
 
 async def start_lesson_daily_rating(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -50,7 +43,7 @@ async def start_lesson_daily_rating(update: Update, context: ContextTypes.DEFAUL
     context.user_data['state'] = 'rating_direction'
 
     await update.message.reply_text(
-        get_text('rating_intro', context) + "\n\n" + get_text('choose_direction', context),
+        utils.get_text('rating_intro', context) + "\n\n" + utils.get_text('choose_direction', context),
         reply_markup=get_directions_keyboard(context)
     )
 
@@ -59,24 +52,24 @@ async def handle_lesson_direction_choice(update: Update, context: ContextTypes.D
     direction_text = update.message.text
     
     # 🔙 Orqaga tugmasi
-    if direction_text == get_text('btn_back', context):
+    if direction_text == utils.get_text('btn_back', context):
         from main import start
         return await start(update, context)
 
     # ALL_DIRECTIONS yuqorida import qilingan
-    direction_code = get_code_by_text(direction_text, ALL_DIRECTIONS, context)
+    direction_code = utils.get_direction_code(direction_text, context)
 
     if direction_code:
         context.user_data['direction'] = direction_code
         context.user_data['state'] = 'rating_course'
 
         await update.message.reply_text(
-            f"✅ {direction_text}\n\n{get_text('choose_course', context)}",
+            f"✅ {direction_text}\n\n{utils.get_text('choose_course', context)}",
             reply_markup=get_courses_keyboard(context)
         )
     else:
         await update.message.reply_text(
-            f"⚠️ {get_text('choose_direction', context)}",
+            f"⚠️ {utils.get_text('choose_direction', context)}",
             reply_markup=get_directions_keyboard(context)
         )
 
@@ -88,24 +81,24 @@ async def handle_lesson_course_choice(update: Update, context: ContextTypes.DEFA
     if course_text == get_text('btn_back', context):
         context.user_data['state'] = 'rating_direction'
         return await update.message.reply_text(
-            get_text('choose_direction', context),
+            utils.get_text('choose_direction', context),
             reply_markup=get_directions_keyboard(context)
         )
 
     # COURSES yuqorida import qilingan
-    course_code = get_code_by_text(course_text, COURSES, context)
+    course_code = utils.get_course_code(course_text, context)
 
     if course_code:
         context.user_data['course'] = course_code
         context.user_data['state'] = 'rating_subject'
 
         await update.message.reply_text(
-            get_text('enter_subject', context),
+            utils.get_text('enter_subject', context),
             reply_markup=get_back_keyboard(context)
         )
     else:
         await update.message.reply_text(
-            f"⚠️ {get_text('choose_course', context)}",
+            f"⚠️ {utils.get_text('choose_course', context)}",
             reply_markup=get_courses_keyboard(context)
         )
 
@@ -113,10 +106,10 @@ async def handle_lesson_course_choice(update: Update, context: ContextTypes.DEFA
 async def handle_subject_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     subject_name = update.message.text
 
-    if subject_name == get_text('btn_back', context):
+    if subject_name == utils.get_text('btn_back', context):
         context.user_data['state'] = 'rating_course'
         return await update.message.reply_text(
-            get_text('choose_course', context),
+            utils.get_text('choose_course', context),
             reply_markup=get_courses_keyboard(context)
         )
 
@@ -124,7 +117,7 @@ async def handle_subject_name(update: Update, context: ContextTypes.DEFAULT_TYPE
     context.user_data['state'] = 'rating_teacher'
 
     await update.message.reply_text(
-        get_text('enter_teacher', context),
+        utils.get_text('enter_teacher', context),
         reply_markup=get_back_keyboard(context)
     )
 
@@ -135,7 +128,7 @@ async def handle_teacher_name(update: Update, context: ContextTypes.DEFAULT_TYPE
     if teacher_name == get_text('btn_back', context) or teacher_name == "🔙 Orqaga":
         context.user_data['state'] = 'rating_subject'
         return await update.message.reply_text(
-            get_text('enter_subject', context),
+            utils.get_text('enter_subject', context),
             reply_markup=get_back_keyboard(context)
         )
 
@@ -143,16 +136,18 @@ async def handle_teacher_name(update: Update, context: ContextTypes.DEFAULT_TYPE
     context.user_data['question_index'] = 0
     context.user_data['state'] = 'rating_process'
 
+    import html
     questions = get_questions(context)
-    step_info = get_text('step_progress', context).format(step=1)
+    step_info = utils.get_text('step_progress', context).format(step=1)
+    q_text = html.escape(questions[0]['text'])
     
     await update.message.reply_text(
-        f"🧑‍🏫 **DARS BAHOLASH**\n{get_text('stats_divider', context)}\n\n"
+        f"🧑‍🏫 <b>DARS BAHOLASH</b>\n{utils.get_text('stats_divider', context)}\n\n"
         f"{step_info}\n"
-        f"❓ **{questions[0]['text']}**\n\n"
-        f"📍 {get_text('rating_score_query', context) if questions[0]['type'] == 'scale' else get_text('rating_yes_no_query', context)}",
+        f"❓ <b>{q_text}</b>\n\n"
+        f"📍 {utils.get_text('rating_score_query', context) if questions[0]['type'] == 'scale' else utils.get_text('rating_yes_no_query', context)}",
         reply_markup=get_rating_keyboard(context) if questions[0]['type'] == 'scale' else get_yes_no_keyboard(context),
-        parse_mode='Markdown'
+        parse_mode='HTML'
     )
 
 
@@ -175,28 +170,30 @@ async def handle_rating(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
         # --- Orqaga qaytish ---
-        back_text = get_text('btn_back', context)
+        back_text = utils.get_text('btn_back', context)
         if rating_text == back_text or rating_text == "🔙 Orqaga" or rating_text.lower() == "orqaga":
             if i == 0:
                 context.user_data['state'] = 'rating_teacher'
                 return await update.message.reply_text(
-                    get_text('enter_teacher', context),
+                    utils.get_text('enter_teacher', context),
                     reply_markup=get_back_keyboard(context)
                 )
             else:
                 context.user_data['question_index'] -= 1
+                import html
                 idx = context.user_data['question_index']
                 prev_q = questions[idx]
-                step_info = get_text('step_progress', context).format(step=idx + 1)
-                query_text = get_text('rating_score_query', context) if prev_q['type'] == 'scale' else get_text('rating_yes_no_query', context)
+                prev_q_text = html.escape(prev_q['text'])
+                step_info = utils.get_text('step_progress', context).format(step=idx + 1)
+                query_text = utils.get_text('rating_score_query', context) if prev_q['type'] == 'scale' else utils.get_text('rating_yes_no_query', context)
                 keyboard = get_rating_keyboard(context) if prev_q['type'] == 'scale' else get_yes_no_keyboard(context)
                 await update.message.reply_text(
-                    f"🧑‍🏫 **DARS BAHOLASH**\n{get_text('stats_divider', context)}\n\n"
+                    f"🧑‍🏫 <b>DARS BAHOLASH</b>\n{utils.get_text('stats_divider', context)}\n\n"
                     f"{step_info}\n"
-                    f"❓ **{prev_q['text']}**\n\n"
+                    f"❓ <b>{prev_q_text}</b>\n\n"
                     f"📍 {query_text}",
                     reply_markup=keyboard,
-                    parse_mode='Markdown'
+                    parse_mode='HTML'
                 )
                 return
 
@@ -204,8 +201,8 @@ async def handle_rating(update: Update, context: ContextTypes.DEFAULT_TYPE):
         clean_rating = rating_text.strip()
         
         if current_question['type'] == 'yes_no':
-            yes_text = get_text('btn_yes', context)
-            no_text = get_text('btn_no', context)
+            yes_text = utils.get_text('btn_yes', context)
+            no_text = utils.get_text('btn_no', context)
             
             # Kirishni normallashtirish (kichik harflar va har xil variantlar)
             lower_rating = clean_rating.lower()
@@ -215,14 +212,14 @@ async def handle_rating(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 final_answer = no_text
             else:
                 return await update.message.reply_text(
-                    f"⚠️ {get_text('error_yes_no', context)}",
+                    f"⚠️ {utils.get_text('error_yes_no', context)}",
                     reply_markup=get_yes_no_keyboard(context)
                 )
         else:
             # Scale turi - 1-5 ball
             if clean_rating not in ["1", "2", "3", "4", "5"]:
                 return await update.message.reply_text(
-                    get_text('error_select_number', context),
+                    utils.get_text('error_select_number', context),
                     reply_markup=get_rating_keyboard(context)
                 )
             final_answer = clean_rating
@@ -255,15 +252,15 @@ async def handle_rating(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Yakuniy xabar
             confirmation_text = (
-                f"{get_text('rating_thanks', context)}\n"
-                f"{get_text('stats_divider', context)}\n\n"
-                f"{get_text('rating_success_footer', context)}\n\n"
-                f"🚀 _Rahmat!_"
+                f"{utils.get_text('rating_thanks', context)}\n"
+                f"{utils.get_text('stats_divider', context)}\n\n"
+                f"{utils.get_text('rating_success_footer', context)}\n\n"
+                f"🚀 <i>Rahmat!</i>"
             )
             await update.message.reply_text(
                 confirmation_text,
                 reply_markup=get_main_menu_keyboard(context),
-                parse_mode='Markdown'
+                parse_mode='HTML'
             )
             
             # Holatni tozalash va asosiy menyuga qaytarish
@@ -276,18 +273,20 @@ async def handle_rating(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         # Keyingi savol
+        import html
         next_q = questions[next_idx]
-        step_info = get_text('step_progress', context).format(step=next_idx + 1)
-        query_text = get_text('rating_score_query', context) if next_q['type'] == 'scale' else get_text('rating_yes_no_query', context)
+        next_q_text = html.escape(next_q['text'])
+        step_info = utils.get_text('step_progress', context).format(step=next_idx + 1)
+        query_text = utils.get_text('rating_score_query', context) if next_q['type'] == 'scale' else utils.get_text('rating_yes_no_query', context)
         keyboard = get_rating_keyboard(context) if next_q['type'] == 'scale' else get_yes_no_keyboard(context)
         
         await update.message.reply_text(
-            f"🧑‍🏫 **DARS BAHOLASH**\n{get_text('stats_divider', context)}\n\n"
+            f"🧑‍🏫 <b>DARS BAHOLASH</b>\n{utils.get_text('stats_divider', context)}\n\n"
             f"{step_info}\n"
-            f"❓ **{next_q['text']}**\n\n"
+            f"❓ <b>{next_q_text}</b>\n\n"
             f"📍 {query_text}",
             reply_markup=keyboard,
-            parse_mode='Markdown'
+            parse_mode='HTML'
         )
     except Exception as e:
         import logging

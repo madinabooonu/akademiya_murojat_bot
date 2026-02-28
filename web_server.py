@@ -40,6 +40,28 @@ async def cors_middleware(request, handler):
 
 
 # ============================================
+# SECURITY HELPERS
+# ============================================
+
+def admin_required(handler):
+    """Admin huquqini tekshirish uchun decorator"""
+    async def wrapper(request):
+        user_id = request.query.get('user_id')
+        if not user_id:
+            return web.json_response({'error': 'Unauthorized: No user_id'}, status=401)
+        
+        try:
+            import utils.utils as utils
+            if not utils.is_admin(int(user_id)):
+                return web.json_response({'error': 'Forbidden: Not an admin'}, status=403)
+        except (ValueError, TypeError):
+            return web.json_response({'error': 'Invalid user_id'}, status=400)
+            
+        return await handler(request)
+    return wrapper
+
+
+# ============================================
 # DATABASE HELPERS
 # ============================================
 
@@ -70,119 +92,46 @@ def get_translations(lang_code='uz'):
 
 def get_faculties_from_db():
     """Fakultetlarni olish"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT code, translation_key FROM faculties WHERE is_active = 1 ORDER BY sort_order')
-    faculties = [{'code': row[0], 'translation_key': row[1]} for row in cursor.fetchall()]
-    conn.close()
-    return faculties
+    from database_models import get_faculties_dict
+    return [{'code': k, 'translation_key': v} for k, v in get_faculties_dict().items()]
 
 
 def get_directions_from_db(faculty_code=None):
     """Yo'nalishlarni olish"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    from database_models import get_directions_by_faculty, get_all_directions_dict
     if faculty_code:
-        cursor.execute('''
-            SELECT code, faculty_code, translation_key FROM directions 
-            WHERE faculty_code = ? AND is_active = 1 ORDER BY sort_order
-        ''', (faculty_code,))
+        return [{'code': k, 'faculty_code': faculty_code, 'translation_key': v} for k, v in directions.items()]
     else:
-        cursor.execute('SELECT code, faculty_code, translation_key FROM directions WHERE is_active = 1 ORDER BY sort_order')
-    directions = [{'code': row[0], 'faculty_code': row[1], 'translation_key': row[2]} for row in cursor.fetchall()]
-    conn.close()
-    return directions
+        directions = get_all_directions_dict()
+        return [{'code': k, 'translation_key': v} for k, v in directions.items()]
 
 
 def get_courses_from_db(course_type=None):
     """Kurslarni olish"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    if course_type:
-        cursor.execute('''
-            SELECT code, translation_key, course_type FROM courses 
-            WHERE is_active = 1 AND course_type = ? ORDER BY sort_order
-        ''', (course_type,))
-    else:
-        cursor.execute('SELECT code, translation_key, course_type FROM courses WHERE is_active = 1 ORDER BY sort_order')
-    courses = [{'code': row[0], 'translation_key': row[1], 'course_type': row[2]} for row in cursor.fetchall()]
-    conn.close()
-    return courses
+    from database_models import get_courses_dict
+    courses = get_courses_dict(course_type)
+    return [{'code': k, 'translation_key': v} for k, v in courses.items()]
 
 
 def get_education_types_from_db():
     """Ta'lim turlarini olish"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT code, translation_key FROM education_types WHERE is_active = 1 ORDER BY sort_order')
-    edu_types = [{'code': row[0], 'translation_key': row[1]} for row in cursor.fetchall()]
-    conn.close()
-    return edu_types
+    from database_models import get_education_types_dict
+    return [{'code': k, 'translation_key': v} for k, v in get_education_types_dict().items()]
 
 
 def get_education_languages_from_db():
     """Ta'lim tillarini olish"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT code, translation_key FROM education_languages WHERE is_active = 1')
-    edu_langs = [{'code': row[0], 'translation_key': row[1]} for row in cursor.fetchall()]
-    conn.close()
-    return edu_langs
+    from database_models import get_education_languages_dict
+    return [{'code': k, 'translation_key': v} for k, v in get_education_languages_dict().items()]
 
 
 def get_complaint_types_from_db():
     """Murojaat turlarini olish"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT code, translation_key, requires_subject, requires_teacher 
-        FROM complaint_types WHERE is_active = 1
-    ''')
-    complaint_types = [{
-        'code': row[0], 
-        'translation_key': row[1],
-        'requires_subject': bool(row[2]),
-        'requires_teacher': bool(row[3])
-    } for row in cursor.fetchall()]
-    conn.close()
-    return complaint_types
+    from database_models import get_complaint_types_dict
+    return [{'code': k, 'translation_key': v} for k, v in get_complaint_types_dict().items()]
 
 
-# This section (lines 150-177) is redundant as it's redefined better below
-
-
-# Removed local save_rating_to_db (replaced by database.save_lesson_rating)
-
-
-def get_rating_questions_from_db():
-    """Baholash savollarini olish"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT question_number, translation_key, answer_type FROM rating_questions WHERE is_active = 1 ORDER BY question_number')
-    questions = [{
-        'number': row[0],
-        'translation_key': row[1],
-        'type': row[2]
-    } for row in cursor.fetchall()]
-    conn.close()
-    return questions
-
-
-def get_survey_links_from_db():
-    """So'rovnoma havolalarini olish"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT code, url, translation_key FROM survey_links WHERE is_active = 1')
-    surveys = [{
-        'code': row[0],
-        'url': row[1],
-        'translation_key': row[2]
-    } for row in cursor.fetchall()]
-    conn.close()
-    return surveys
-
-
-# Removed local save_complaint_to_db (replaced by database.save_complaint)
+# Redundant code removed
 
 
 # ============================================
@@ -331,8 +280,8 @@ async def api_config(request):
     config['is_admin'] = False
     if user_id:
         try:
-            from utils.utils import is_admin
-            config['is_admin'] = is_admin(int(user_id))
+            import utils.utils as utils
+            config['is_admin'] = utils.is_admin(int(user_id))
         except (ValueError, TypeError):
             pass
         
@@ -457,12 +406,12 @@ def create_webapp_server():
     app.router.add_get('/api/languages', api_languages)
     app.router.add_get('/api/config', api_config)
     
-    # Admin API routes
-    app.router.add_get('/api/admin/stats', api_admin_stats)
-    app.router.add_get('/api/admin/dashboard', api_admin_dashboard)
-    app.router.add_get('/api/admin/settings/{type}', api_admin_settings_list)
-    app.router.add_delete('/api/admin/settings/{type}/{id}', api_admin_delete_setting)
-    app.router.add_get('/api/admin/translations', api_admin_translations_list)
+    # Admin API routes (PROTECTED)
+    app.router.add_get('/api/admin/stats', admin_required(api_admin_stats))
+    app.router.add_get('/api/admin/dashboard', admin_required(api_admin_dashboard))
+    app.router.add_get('/api/admin/settings/{type}', admin_required(api_admin_settings_list))
+    app.router.add_delete('/api/admin/settings/{type}/{id}', admin_required(api_admin_delete_setting))
+    app.router.add_get('/api/admin/translations', admin_required(api_admin_translations_list))
     
     # Root route for index.html
     app.router.add_get('/', index_handler)

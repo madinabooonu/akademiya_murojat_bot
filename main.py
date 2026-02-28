@@ -9,6 +9,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 # Import qilish
 from config.config import BOT_TOKEN, LANGS, WEBAPP_URL
 from database import init_database
+from database_models import init_dynamic_config
 from keyboards.keyboards import (
     get_main_menu_keyboard,
     get_language_keyboard,
@@ -20,13 +21,7 @@ from keyboards.keyboards import (
     get_complaint_types_keyboard,
     get_back_keyboard
 )
-from utils.utils import (
-    is_admin,
-    get_text,
-    get_main_menu_buttons,
-    get_directions_by_faculty,
-    get_faculty_name
-)
+import utils.utils as utils
 
 # Handlerlarni import qilish
 from handlers.complaints.complaint import (
@@ -106,7 +101,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # context.user_data.clear() # Buni o'chiramiz, chunki tilni o'chirib yuboradi
 
-    welcome_text = get_text('welcome', context)
+    welcome_text = utils.get_text('welcome', context)
 
     await update.message.reply_text(
         welcome_text,
@@ -127,28 +122,28 @@ async def handle_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Keling, oddiyroq yo'l tutamiz: 
     # Hozircha hardcode qilingan stringlarni utils.get_text bilan almashtiramiz.
     
-    if text == get_text('btn_complaint', context):
+    if text == utils.get_text('btn_complaint', context):
         await start_complaint(update, context)
 
-    elif text == get_text('btn_rules', context):
+    elif text == utils.get_text('btn_rules', context):
         await show_rules_main(update, context)
 
-    elif text == get_text('btn_survey', context):
+    elif text == utils.get_text('btn_survey', context):
         await show_survey_main(update, context)
 
-    elif text == get_text('btn_admin', context):
+    elif text == utils.get_text('btn_admin', context):
         await show_admin_panel(update, context)
 
-    elif text == get_text('btn_lesson_rating', context):
+    elif text == utils.get_text('btn_lesson_rating', context):
         await start_lesson_daily_rating(update, context)
 
-    elif text == get_text('btn_lang', context):
+    elif text == utils.get_text('btn_lang', context):
         await update.message.reply_text(
-            get_text('btn_lang', context) + ":",
+            utils.get_text('btn_lang', context) + ":",
             reply_markup=get_language_keyboard()
         )
 
-    elif text == get_text('btn_back_main', context) or text == get_text('btn_back', context):
+    elif text == utils.get_text('btn_back_main', context) or text == utils.get_text('btn_back', context):
         await start(update, context)
 
 
@@ -182,7 +177,7 @@ async def handle_complaint_flow(update: Update, context: ContextTypes.DEFAULT_TY
     text = update.message.text
 
     # 🔙 Orqaga tugmasi (Mantiqiy zanjir)
-    if text == get_text('btn_back', context):
+    if text == utils.get_text('btn_back', context):
         if state == 'choosing_faculty':
             await start(update, context)
         
@@ -192,18 +187,18 @@ async def handle_complaint_flow(update: Update, context: ContextTypes.DEFAULT_TY
         elif state == 'choosing_education_type':
             # Fakultetni aniqlaymiz va yo'nalishlar keyboardini qayta chiqaramiz
             faculty_code = context.user_data.get('faculty')
-            directions = get_directions_by_faculty(faculty_code)
+            directions = utils.get_directions_by_faculty(faculty_code)
             context.user_data['state'] = 'choosing_direction'
-            faculty_name = get_faculty_name(faculty_code, context)
+            faculty_name = utils.get_faculty_name(faculty_code, context)
             await update.message.reply_text(
-                f"🏛 {faculty_name}\n\n{get_text('choose_direction', context)}",
+                f"🏛 {faculty_name}\n\n{utils.get_text('choose_direction', context)}",
                 reply_markup=get_dynamic_keyboard(directions, context)
             )
 
         elif state == 'choosing_education_lang':
             context.user_data['state'] = 'choosing_education_type'
             await update.message.reply_text(
-                get_text('choose_edu_type', context),
+                utils.get_text('choose_edu_type', context),
                 reply_markup=get_education_type_keyboard(context)
             )
 
@@ -212,37 +207,44 @@ async def handle_complaint_flow(update: Update, context: ContextTypes.DEFAULT_TY
             if faculty == 'magistratura':
                 # Magistratura - yo'nalish tanlashga qaytadi
                 directions = context.user_data.get('directions_map', {})
-                faculty_name = get_faculty_name(faculty, context)
+                faculty_name = utils.get_faculty_name(faculty, context)
                 context.user_data['state'] = 'choosing_direction'
                 await update.message.reply_text(
-                    f"🏛 {faculty_name}\n\n{get_text('choose_direction', context)}",
+                    f"🏛 {faculty_name}\n\n{utils.get_text('choose_direction', context)}",
                     reply_markup=get_dynamic_keyboard(directions, context)
                 )
             else:
                 context.user_data['state'] = 'choosing_education_lang'
                 await update.message.reply_text(
-                    get_text('choose_edu_lang', context),
+                    utils.get_text('choose_edu_lang', context),
                     reply_markup=get_education_lang_keyboard(context)
                 )
+
+        elif state == 'choosing_course':
+            context.user_data['state'] = 'choosing_course'
+            await update.message.reply_text(
+                utils.get_text('choose_course', context),
+                reply_markup=get_courses_keyboard(context)
+            )
 
         elif state == 'choosing_complaint_type':
             context.user_data['state'] = 'choosing_course'
             await update.message.reply_text(
-                get_text('choose_course', context),
+                utils.get_text('choose_course', context),
                 reply_markup=get_courses_keyboard(context)
             )
 
         elif state == 'entering_subject':
             context.user_data['state'] = 'choosing_complaint_type'
             await update.message.reply_text(
-                get_text('choose_complaint_type', context),
+                utils.get_text('choose_complaint_type', context),
                 reply_markup=get_complaint_types_keyboard(context)
             )
 
         elif state == 'entering_teacher':
             context.user_data['state'] = 'entering_subject'
             await update.message.reply_text(
-                get_text('enter_subject', context),
+                utils.get_text('enter_subject', context),
                 reply_markup=get_back_keyboard(context)
             )
 
@@ -251,13 +253,13 @@ async def handle_complaint_flow(update: Update, context: ContextTypes.DEFAULT_TY
             if complaint_type == 'teacher':
                 context.user_data['state'] = 'entering_teacher'
                 await update.message.reply_text(
-                    get_text('enter_teacher', context),
+                    utils.get_text('enter_teacher', context),
                     reply_markup=get_back_keyboard(context)
                 )
             else:
                 context.user_data['state'] = 'choosing_complaint_type'
                 await update.message.reply_text(
-                    get_text('choose_complaint_type', context),
+                    utils.get_text('choose_complaint_type', context),
                     reply_markup=get_complaint_types_keyboard(context)
                 )
         return
@@ -318,19 +320,19 @@ async def handle_rules_flow(update: Update, context: ContextTypes.DEFAULT_TYPE):
     state = context.user_data.get('state', '')
     text = update.message.text
 
-    if text == get_text('btn_grading', context):
+    if text == utils.get_text('btn_grading', context):
         await show_grading_rules(update, context)
 
-    elif text == get_text('btn_exam', context):
+    elif text == utils.get_text('btn_exam', context):
         await show_exam_rules(update, context)
 
-    elif text == get_text('btn_general', context):
+    elif text == utils.get_text('btn_general', context):
         await show_general_rules(update, context)
 
-    elif text == get_text('btn_download_pdf', context):
+    elif text == utils.get_text('btn_download_pdf', context):
         await download_pdf(update, context)
 
-    elif text == get_text('btn_back', context):
+    elif text == utils.get_text('btn_back', context):
         if state == 'rules_main':
             await start(update, context)
         else:
@@ -343,19 +345,19 @@ async def handle_survey_flow(update: Update, context: ContextTypes.DEFAULT_TYPE)
     state = context.user_data.get('state', '')
     text = update.message.text
 
-    if text == get_text('btn_survey_teachers', context):
+    if text == utils.get_text('btn_survey_teachers', context):
         await show_teachers_survey(update, context)
 
-    elif text == get_text('btn_survey_edu', context):
+    elif text == utils.get_text('btn_survey_edu', context):
         await show_education_survey(update, context)
 
-    elif text == get_text('btn_survey_emp', context):
+    elif text == utils.get_text('btn_survey_emp', context):
         await show_employers_survey(update, context)
 
-    elif text == get_text('btn_survey_link', context):
+    elif text == utils.get_text('btn_survey_link', context):
         await open_survey_link(update, context)
 
-    elif text == get_text('btn_back', context):
+    elif text == utils.get_text('btn_back', context):
         if state == 'survey_main':
             await start(update, context)
         else:
@@ -364,28 +366,28 @@ async def handle_survey_flow(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 async def handle_admin_flow(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Admin panel jarayonini boshqarish"""
-    if not is_admin(update.effective_user.id):
-        await update.message.reply_text(get_text('no_permission', context))
+    if not utils.is_admin(update.effective_user.id):
+        await update.message.reply_text(utils.get_text('no_permission', context))
         return
 
     text = update.message.text
 
-    if text == get_text('btn_stats', context):
+    if text == utils.get_text('btn_stats', context):
         await show_statistics(update, context)
 
-    elif text == get_text('btn_view_complaints', context):
+    elif text == utils.get_text('btn_view_complaints', context):
         await view_complaints(update, context)
 
-    elif text == get_text('btn_export_menu', context):
+    elif text == utils.get_text('btn_export_menu', context):
         await show_export_menu(update, context)
 
-    elif text == get_text('btn_dashboard', context):
+    elif text == utils.get_text('btn_dashboard', context):
         await show_dashboard(update, context)
     
-    elif text == get_text('btn_settings', context):
+    elif text == utils.get_text('btn_settings', context):
         await show_settings_menu(update, context)
     
-    elif text == get_text('btn_back_main', context):
+    elif text == utils.get_text('btn_back_main', context):
         await start(update, context)
 
 
@@ -393,13 +395,13 @@ async def handle_admin_export_flow(update: Update, context: ContextTypes.DEFAULT
     """Excel export jarayonini boshqarish"""
     text = update.message.text
 
-    if text == get_text('btn_export_excel', context):
+    if text == utils.get_text('btn_export_excel', context):
         await export_to_excel_handler(update, context)
 
-    elif text == get_text('btn_export_lesson', context):
+    elif text == utils.get_text('btn_export_lesson', context):
         await export_to_daily_lesson_excel_handler(update, context)
 
-    elif text == get_text('btn_back', context):
+    elif text == utils.get_text('btn_back', context):
         await show_admin_panel(update, context)
 
 
@@ -409,88 +411,88 @@ async def handle_admin_export_flow(update: Update, context: ContextTypes.DEFAULT
 
 async def handle_settings_menu_flow(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Sozlamalar menyusi oqimi"""
-    if not is_admin(update.effective_user.id):
+    if not utils.is_admin(update.effective_user.id):
         return
     
     text = update.message.text
     
-    if text == get_text('btn_manage_admins', context):
+    if text == utils.get_text('btn_manage_admins', context):
         await show_admins_menu(update, context)
-    elif text == get_text('btn_manage_faculties', context):
+    elif text == utils.get_text('btn_manage_faculties', context):
         await show_faculties_menu(update, context)
-    elif text == get_text('btn_manage_directions', context):
+    elif text == utils.get_text('btn_manage_directions', context):
         await show_directions_menu(update, context)
-    elif text == get_text('btn_manage_questions', context):
+    elif text == utils.get_text('btn_manage_questions', context):
         await show_questions_menu(update, context)
-    elif text == get_text('btn_back', context):
+    elif text == utils.get_text('btn_back', context):
         await show_admin_panel(update, context)
 
 
 async def handle_admins_crud_flow(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Adminlar CRUD oqimi"""
-    if not is_admin(update.effective_user.id):
+    if not utils.is_admin(update.effective_user.id):
         return
     
     text = update.message.text
     
-    if text == get_text('btn_add', context):
+    if text == utils.get_text('btn_add', context):
         await prompt_add_admin(update, context)
-    elif text == get_text('btn_list', context):
+    elif text == utils.get_text('btn_list', context):
         await list_admins(update, context)
-    elif text == get_text('btn_delete', context):
+    elif text == utils.get_text('btn_delete', context):
         await prompt_delete_admin(update, context)
-    elif text == get_text('btn_back', context):
+    elif text == utils.get_text('btn_back', context):
         await show_settings_menu(update, context)
 
 
 async def handle_faculties_crud_flow(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Fakultetlar CRUD oqimi"""
-    if not is_admin(update.effective_user.id):
+    if not utils.is_admin(update.effective_user.id):
         return
     
     text = update.message.text
     
-    if text == get_text('btn_add', context):
+    if text == utils.get_text('btn_add', context):
         await prompt_add_faculty(update, context)
-    elif text == get_text('btn_list', context):
+    elif text == utils.get_text('btn_list', context):
         await list_faculties(update, context)
-    elif text == get_text('btn_delete', context):
+    elif text == utils.get_text('btn_delete', context):
         await prompt_delete_faculty(update, context)
-    elif text == get_text('btn_back', context):
+    elif text == utils.get_text('btn_back', context):
         await show_settings_menu(update, context)
 
 
 async def handle_directions_crud_flow(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Yo'nalishlar CRUD oqimi"""
-    if not is_admin(update.effective_user.id):
+    if not utils.is_admin(update.effective_user.id):
         return
     
     text = update.message.text
     
-    if text == get_text('btn_add', context):
+    if text == utils.get_text('btn_add', context):
         await prompt_add_direction(update, context)
-    elif text == get_text('btn_list', context):
+    elif text == utils.get_text('btn_list', context):
         await list_directions(update, context)
-    elif text == get_text('btn_delete', context):
+    elif text == utils.get_text('btn_delete', context):
         await prompt_delete_direction(update, context)
-    elif text == get_text('btn_back', context):
+    elif text == utils.get_text('btn_back', context):
         await show_settings_menu(update, context)
 
 
 async def handle_questions_crud_flow(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Savollar CRUD oqimi"""
-    if not is_admin(update.effective_user.id):
+    if not utils.is_admin(update.effective_user.id):
         return
     
     text = update.message.text
     
-    if text == get_text('btn_add', context):
+    if text == utils.get_text('btn_add', context):
         await prompt_add_question(update, context)
-    elif text == get_text('btn_list', context):
+    elif text == utils.get_text('btn_list', context):
         await list_questions(update, context)
-    elif text == get_text('btn_delete', context):
+    elif text == utils.get_text('btn_delete', context):
         await prompt_delete_question(update, context)
-    elif text == get_text('btn_back', context):
+    elif text == utils.get_text('btn_back', context):
         await show_settings_menu(update, context)
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -505,7 +507,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 2. Global: Asosiy menyu tugmalari
     # Har bir tildagi variantlarni tekshirish kerak (Endi utils orqali)
-    main_menu_buttons = get_main_menu_buttons()
+    main_menu_buttons = utils.get_main_menu_buttons()
 
     if text in main_menu_buttons:
         # Menyu tugmasi bosilsa, holatdan qat'iy nazar menyuga ishlov beramiz
@@ -526,7 +528,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Tartib qoidalar
     rules_states = ['rules_main', 'rules_grading', 'rules_exam', 'rules_general']
-    if state in rules_states or text in [get_text('btn_grading', context), get_text('btn_exam', context), get_text('btn_general', context)]:
+    if state in rules_states or text in [utils.get_text('btn_grading', context), utils.get_text('btn_exam', context), utils.get_text('btn_general', context)]:
         await handle_rules_flow(update, context)
         return
 
@@ -635,7 +637,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Admin komandasi"""
-    await show_admin_panel(update, context)
+    await utils.show_admin_panel(update, context)
 
 
 def main():
@@ -646,6 +648,14 @@ def main():
     # Ma'lumotlar bazasini yaratish
     init_database()
     logger.info("Ma'lumotlar bazasi ishga tushirildi")
+
+    # Dinamik konfiguratsiyani yuklash
+    init_dynamic_config()
+    logger.info("Dinamik konfiguratsiya yuklandi")
+    
+    # Tarjimalarni xotiraga (keshga) yuklash
+    utils.load_translations_to_cache()
+    logger.info("Tarjimalar keshga yuklandi")
 
     # Bot applicationni yaratish - timeout sozlamalari bilan
     application = (

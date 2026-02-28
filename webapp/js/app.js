@@ -664,22 +664,41 @@ function renderSurveyList() {
  */
 let weeklyChartInstance = null;
 let typeChartInstance = null;
+let directionChartInstance = null;
+let courseChartInstance = null;
+let gauges = {};
 
 async function fetchAdminDashboard() {
+    const user_id = tg?.initDataUnsafe?.user?.id || '';
     try {
-        const resp = await fetch(`${API_BASE}/api/admin/stats`);
+        const resp = await fetch(`${API_BASE}/api/admin/stats?user_id=${user_id}`);
         const stats = await resp.json();
 
-        // 1. Text Stats
-        animateCount('statsToday', stats.today || 0);
-        animateCount('statsWeek', stats.week || 0);
-        animateCount('statsMonth', stats.month || 0);
+        // 1. Text & Totals
+        const total = stats.total || 0;
+        const today = stats.today || 0;
+        const week = stats.week || 0;
+        const month = stats.month || 0;
 
-        // 2. Weekly Activity Chart
+        animateCount('statsTotalDisplay', total);
+
+        // 2. Pro Gauges
+        renderGaugeChart('gaugeToday', Math.min(100, Math.round((today / (month || 1)) * 100)), '#6366f1');
+        renderGaugeChart('gaugeWeek', Math.min(100, Math.round((week / (month || 1)) * 100)), '#a855f7');
+        renderGaugeChart('gaugeMonth', Math.min(100, Math.round((month / (total || 1)) * 100)), '#ec4899');
+        renderGaugeChart('gaugeTotal', 100, '#10b981'); // Reference 100%
+
+        // 3. Main Weekly Activity (Area Chart)
         updateWeeklyChart(stats.weekly || []);
 
         // 3. Complaint Type Distribution
         updateTypeChart(stats.by_type || []);
+
+        // 4. Direction Distribution
+        updateDirectionChart(stats.by_direction || []);
+
+        // 5. Course Distribution
+        updateCourseChart(stats.by_course || []);
 
         // 4. Top Direction Highlight
         if (stats.top_direction && stats.top_direction[0]) {
@@ -692,6 +711,45 @@ async function fetchAdminDashboard() {
         }
     } catch (err) {
         console.error('Admin Fetch Error', err);
+    }
+}
+
+function renderGaugeChart(id, percent, color) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+
+    if (gauges[id]) gauges[id].destroy();
+
+    const isDark = document.documentElement.classList.contains('dark');
+
+    gauges[id] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [percent, 100 - percent],
+                backgroundColor: [color, isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'],
+                borderWidth: 0,
+                circumference: 360,
+                rotation: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '80%',
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            animation: { duration: 2000, easing: 'easeOutQuart' }
+        }
+    });
+
+    const valEl = document.getElementById(id + 'Val');
+    if (valEl) {
+        let obj = { val: 0 };
+        gsap.to(obj, {
+            val: percent,
+            duration: 1.5,
+            onUpdate: () => valEl.textContent = Math.round(obj.val) + '%'
+        });
     }
 }
 
@@ -716,6 +774,13 @@ function updateWeeklyChart(data) {
     if (weeklyChartInstance) weeklyChartInstance.destroy();
 
     const isDark = document.documentElement.classList.contains('dark');
+    const chartCtx = ctx.getContext('2d');
+
+    // Premium Multi-stop Gradient
+    const gradient = chartCtx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.4)');
+    gradient.addColorStop(0.5, 'rgba(168, 85, 247, 0.1)');
+    gradient.addColorStop(1, 'rgba(236, 72, 153, 0)');
 
     weeklyChartInstance = new Chart(ctx, {
         type: 'line',
@@ -725,15 +790,132 @@ function updateWeeklyChart(data) {
                 label: 'Murojaatlar',
                 data: counts,
                 borderColor: '#6366f1',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                backgroundColor: gradient,
                 borderWidth: 4,
                 tension: 0.4,
                 fill: true,
                 pointBackgroundColor: '#6366f1',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 6
+                pointBorderColor: isDark ? '#1e293b' : '#fff',
+                pointBorderWidth: 3,
+                pointRadius: 6,
+                pointHoverRadius: 10,
+                pointHoverBorderWidth: 4,
+                shadowBlur: 15,
+                shadowColor: 'rgba(99, 102, 241, 0.5)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                    titleColor: isDark ? '#f8fafc' : '#1e293b',
+                    bodyColor: isDark ? '#94a3b8' : '#64748b',
+                    padding: 15,
+                    cornerRadius: 16,
+                    displayColors: false,
+                    titleFont: { weight: 'black', size: 14 },
+                    bodyFont: { weight: 'bold', size: 12 },
+                    backdropBlur: 10
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { weight: 'black', size: 10 }, padding: 10 }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', borderDash: [5, 5] },
+                    ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { weight: 'bold' }, padding: 10, stepSize: 1 }
+                }
+            },
+            animation: {
+                duration: 2000,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+}
+
+function updateDirectionChart(data) {
+    const ctx = document.getElementById('directionChart');
+    if (!ctx) return;
+
+    // Filter out None values and take top 5-7
+    const filteredData = data.filter(item => item[0]).slice(0, 7);
+    const labels = filteredData.map(item => getTranslateName(item[0]));
+    const counts = filteredData.map(item => item[1]);
+
+    if (directionChartInstance) directionChartInstance.destroy();
+
+    const isDark = document.documentElement.classList.contains('dark');
+
+    directionChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: counts,
+                backgroundColor: '#a855f7',
+                borderRadius: 10,
+                barThickness: 12,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { weight: 'bold', size: 9 } }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: isDark ? '#e2e8f0' : '#1e293b', font: { weight: 'black', size: 10 } }
+                }
+            }
+        }
+    });
+}
+
+function updateCourseChart(data) {
+    const ctx = document.getElementById('courseChart');
+    if (!ctx) return;
+
+    // Sort by course number if possible
+    const sortedData = [...data].sort((a, b) => {
+        const numA = parseInt(a[0].match(/\d+/)?.[0] || 0);
+        const numB = parseInt(b[0].match(/\d+/)?.[0] || 0);
+        return numA - numB;
+    });
+
+    const labels = sortedData.map(item => {
+        const key = `course_${item[0]}`;
+        return t(key) || item[0];
+    });
+    const counts = sortedData.map(item => item[1]);
+
+    if (courseChartInstance) courseChartInstance.destroy();
+
+    const isDark = document.documentElement.classList.contains('dark');
+
+    courseChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Murojaatlar',
+                data: counts,
+                backgroundColor: 'rgba(168, 85, 247, 0.2)',
+                borderColor: '#a855f7',
+                borderWidth: 2,
+                borderRadius: 15,
+                hoverBackgroundColor: '#a855f7',
             }]
         },
         options: {
@@ -743,12 +925,12 @@ function updateWeeklyChart(data) {
             scales: {
                 x: {
                     grid: { display: false },
-                    ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { weight: 'bold' } }
+                    ticks: { color: isDark ? '#e2e8f0' : '#1e293b', font: { weight: 'black', size: 11 } }
                 },
                 y: {
                     beginAtZero: true,
-                    grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
-                    ticks: { color: isDark ? '#94a3b8' : '#64748b', stepSize: 1 }
+                    grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', borderDash: [5, 5] },
+                    ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { weight: 'bold' } }
                 }
             }
         }
@@ -764,6 +946,8 @@ function updateTypeChart(data) {
 
     if (typeChartInstance) typeChartInstance.destroy();
 
+    const isDark = document.documentElement.classList.contains('dark');
+
     typeChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -771,23 +955,31 @@ function updateTypeChart(data) {
             datasets: [{
                 data: counts,
                 backgroundColor: ['#6366f1', '#a855f7', '#ec4899', '#f59e0b', '#10b981'],
+                hoverBackgroundColor: ['#4f46e5', '#9333ea', '#db2777', '#d97706', '#059669'],
                 borderWidth: 0,
-                hoverOffset: 10
+                hoverOffset: 15,
+                weight: 2
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '75%',
+            cutout: '72%',
             plugins: {
                 legend: {
-                    position: 'right',
+                    position: 'bottom',
                     labels: {
-                        color: document.documentElement.classList.contains('dark') ? '#94a3b8' : '#64748b',
-                        font: { weight: 'bold', size: 10 },
-                        padding: 20
+                        color: isDark ? '#cbd5e1' : '#475569',
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: { weight: 'black', size: 10 },
+                        padding: 15
                     }
                 }
+            },
+            animation: {
+                animateScale: true,
+                animateRotate: true
             }
         }
     });
@@ -813,11 +1005,12 @@ async function showAdminSettings(type) {
 }
 
 async function loadProSettingsList(type) {
+    const user_id = tg?.initDataUnsafe?.user?.id || '';
     const container = document.getElementById('settingsList');
     container.innerHTML = '<div class="py-20 flex flex-col items-center gap-4 text-slate-400"><div class="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div><p class="font-bold text-sm">Yuklanmoqda...</p></div>';
 
     try {
-        const resp = await fetch(`${API_BASE}/api/admin/settings/${type}`);
+        const resp = await fetch(`${API_BASE}/api/admin/settings/${type}?user_id=${user_id}`);
         const data = await resp.json();
         container.innerHTML = '';
 
@@ -860,8 +1053,9 @@ async function loadProSettingsList(type) {
 async function deleteSetting(type, id) {
     if (!confirm('Haqiqatdan ham o\'chirmoqchimisiz?')) return;
     showOverlayLoading();
+    const user_id = tg?.initDataUnsafe?.user?.id || '';
     try {
-        const res = await fetch(`${API_BASE}/api/admin/settings/${type}/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API_BASE}/api/admin/settings/${type}/${id}?user_id=${user_id}`, { method: 'DELETE' });
         if (res.ok) {
             vibrate('success');
             loadProSettingsList(type);
