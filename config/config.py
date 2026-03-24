@@ -7,7 +7,7 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN", "8136137840:AAF7_Wf9KU2epPkGKdsijfdx6zIw
 ADMIN_IDS_STR = os.environ.get("ADMIN_IDS", "2015170305,1370651372")
 ADMIN_IDS = [int(i.strip()) for i in ADMIN_IDS_STR.split(",") if i.strip()]
 
-DATABASE_NAME = os.environ.get("DATABASE_PATH", 'education_system.db')
+DATABASE_NAME = os.environ.get("DATABASE_PATH", '/data/education_system.db')
 
 # Mini App URL (HTTPS kerak Telegram uchun)
 _env_webapp_url = os.environ.get("WEBAPP_URL", "")
