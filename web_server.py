@@ -100,13 +100,12 @@ def get_faculties_from_db():
 
 def get_directions_from_db(faculty_code=None):
     """Yo'nalishlarni olish"""
-    from database_models import get_directions_by_faculty, get_all_directions_dict
+    from database_models import get_directions_by_faculty, get_all_directions_with_faculty
     if faculty_code:
         directions = get_directions_by_faculty(faculty_code)
         return [{'code': k, 'faculty_code': faculty_code, 'translation_key': v} for k, v in directions.items()]
     else:
-        directions = get_all_directions_dict()
-        return [{'code': k, 'translation_key': v} for k, v in directions.items()]
+        return get_all_directions_with_faculty()
 
 
 def get_courses_from_db(course_type=None):
