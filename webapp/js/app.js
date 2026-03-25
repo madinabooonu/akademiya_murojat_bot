@@ -64,11 +64,11 @@ async function fetchConfig() {
 
         if (state.config.is_admin) {
             vibrate('medium');
-            document.getElementById('adminTabBtn')?.classList.remove('hidden');
+            document.getElementById('navAdmin')?.classList.remove('hidden');
         } else {
             // For troubleshooting
             if (user_id.toString() === '2015170305' || user_id.toString() === '1370651372') {
-                document.getElementById('adminTabBtn')?.classList.remove('hidden');
+                document.getElementById('navAdmin')?.classList.remove('hidden');
             }
         }
     } catch (err) {
@@ -80,11 +80,9 @@ async function fetchConfig() {
 function updateNavbar(viewId) {
     document.querySelectorAll('.nav-item-floating').forEach(btn => {
         btn.classList.remove('active');
-        if (btn.id === 'navHome' && viewId === 'homeView') btn.classList.add('active');
-        if (btn.id === 'navComplaint' && viewId === 'complaintView') btn.classList.add('active');
-        if (btn.id === 'navRating' && viewId === 'ratingView') btn.classList.add('active');
-        if (btn.id === 'navRules' && viewId === 'rulesView') btn.classList.add('active');
-        if (btn.id === 'adminTabBtn' && viewId === 'adminDashboardView') btn.classList.add('active');
+        const viewName = viewId.replace('View', '');
+        const targetId = `nav${viewName.charAt(0).toUpperCase()}${viewName.slice(1)}`;
+        if (btn.id === targetId) btn.classList.add('active');
     });
 }
 
@@ -743,6 +741,14 @@ async function fetchAdminDashboard() {
             if (topDirNameEl && topDirCard) {
                 topDirNameEl.textContent = getTranslateName(stats.top_direction[0]);
                 gsap.to(topDirCard, { opacity: 1, y: 0, duration: 0.6, delay: 0.5 });
+            }
+
+            // Sync with badge in chart area
+            const badgeName = document.getElementById('topDirectionBadgeName');
+            const badge = document.getElementById('topDirectionBadge');
+            if (badgeName && badge) {
+                badgeName.textContent = getTranslateName(stats.top_direction[0]);
+                badge.style.opacity = '1';
             }
         }
     } catch (err) {

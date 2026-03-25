@@ -102,6 +102,7 @@ def get_directions_from_db(faculty_code=None):
     """Yo'nalishlarni olish"""
     from database_models import get_directions_by_faculty, get_all_directions_dict
     if faculty_code:
+        directions = get_directions_by_faculty(faculty_code)
         return [{'code': k, 'faculty_code': faculty_code, 'translation_key': v} for k, v in directions.items()]
     else:
         directions = get_all_directions_dict()
@@ -131,6 +132,19 @@ def get_complaint_types_from_db():
     """Murojaat turlarini olish"""
     from database_models import get_complaint_types_dict
     return [{'code': k, 'translation_key': v} for k, v in get_complaint_types_dict().items()]
+
+
+def get_rating_questions_from_db():
+    """Baholash savollarini olish"""
+    from database_models import get_rating_questions
+    questions = get_rating_questions()
+    return [{'number': q[0], 'translation_key': q[1], 'type': q[2]} for q in questions]
+
+
+def get_survey_links_from_db():
+    """So'rovnoma havolalarini olish"""
+    from database_models import get_survey_links_dict
+    return [{'code': k, 'url': v} for k, v in get_survey_links_dict().items()]
 
 
 # Redundant code removed
