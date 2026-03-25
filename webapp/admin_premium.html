@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academy | Elite Intelligence Dashboard</title>
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Icons & CDNs -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        :root {
+            --bg-deep: #000000;
+            --surface: rgba(10, 10, 10, 0.6);
+            --surface-accent: rgba(20, 20, 20, 0.8);
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.3);
+            --secondary: #a855f7;
+            --secondary-glow: rgba(168, 85, 247, 0.3);
+            --accent: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #f43f5e;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.05);
+
+            --font-display: 'Plus Jakarta Sans', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Subtle Animated Mesh Background */
+        .bg-mesh {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: var(--bg-deep);
+            animation: meshMove 20s ease infinite alternate;
+        }
+
+        @keyframes meshMove {
+            0% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1.1);
+            }
+        }
+
+        /* Access Denied Overlay */
+        #accessGuard {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: var(--bg-deep);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            display: none;
+            /* Initially hidden, JS will show if needed */
+        }
+
+        .guard-icon {
+            font-size: 5rem;
+            color: var(--danger);
+            margin-bottom: 2rem;
+            filter: drop-shadow(0 0 20px rgba(255, 77, 106, 0.3));
+        }
+
+        /* Layout Structure */
+        .dashboard-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            opacity: 0;
+            /* JS will reveal with staggered animation */
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-hex {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bg-deep);
+            font-weight: 900;
+        }
+
+        .brand-name {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .admin-badge {
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 0.65rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border: 1px solid rgba(0, 229, 255, 0.2);
+            margin-left: 0.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        #liveClock {
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .lang-toggle {
+            display: flex;
+            background: var(--surface-accent);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .lang-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .lang-btn.active {
+            background: var(--primary);
+            color: var(--bg-deep);
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        /* KPI Cards Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .card-glass {
+            background: var(--surface);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            padding: 2.25rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-glass:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(15, 15, 15, 0.8);
+            box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.6);
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            background: var(--surface-accent);
+            color: var(--primary);
+        }
+
+        .kpi-trend {
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .trend-up {
+            color: var(--success);
+        }
+
+        .trend-down {
+            color: var(--danger);
+        }
+
+        .kpi-label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .kpi-value {
+            font-family: var(--font-mono);
+            font-size: 2.25rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, var(--text-muted));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Charts Section */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .chart-box {
+            background: var(--surface);
+            border-radius: 32px;
+            padding: 2rem;
+            border: 1px solid var(--glass-border);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .chart-title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chart-title i {
+            color: var(--secondary);
+        }
+
+        /* Table Section */
+        .table-area {
+            background: var(--surface);
+            border-radius: 32px;
+            padding: 2rem;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 3rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0.75rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+        }
+
+        tbody tr {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        tbody tr td {
+            background: var(--surface-accent);
+            padding: 1.25rem 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        tbody tr td:first-child {
+            border-radius: 16px 0 0 16px;
+            border-left: 3px solid transparent;
+        }
+
+        tbody tr td:last-child {
+            border-radius: 0 16px 16px 0;
+        }
+
+        tbody tr:hover td {
+            background: #1C273D;
+            transform: scale(1.002);
+        }
+
+        tbody tr:hover td:first-child {
+            border-left-color: var(--primary);
+        }
+
+        /* Status & Badges */
+        .badge-type {
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .status-yellow {
+            background: rgba(255, 181, 71, 0.1);
+            color: var(--warning);
+        }
+
+        .status-green {
+            background: rgba(0, 224, 150, 0.1);
+            color: var(--success);
+        }
+
+        .status-red {
+            background: rgba(255, 77, 106, 0.1);
+            color: var(--danger);
+        }
+
+        /* Fixed Export Button */
+        .export-btn-fixed {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--primary);
+            color: var(--bg-deep);
+            padding: 1rem 2rem;
+            border-radius: 16px;
+            border: none;
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px var(--primary-glow);
+            z-index: 1000;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 20px rgba(0, 229, 255, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 229, 255, 0);
+            }
+        }
+
+        .export-btn-fixed:hover {
+            transform: scale(1.05) translateY(-5px);
+            background: #00f5ff;
+        }
+
+        /* Responsive Fixes */
+        @media (max-width: 1100px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 1.5rem;
+                text-align: center;
+            }
+
+            .dashboard-wrapper {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-mesh"></div>
+
+    <!-- Admin Guard Page -->
+    <div id="accessGuard">
+        <i class="fas fa-lock guard-icon"></i>
+        <h1 class="brand-name" style="font-size: 2.5rem; margin-bottom: 1rem;">ACCESS DENIED</h1>
+        <p id="guardText" style="color: var(--text-muted); max-width: 400px;">
+            Sizda ushbu dashboardga kirish huquqi yo'q. Iltimos, Telegram bot admin menyusi orqali kiring.
+        </p>
+    </div>
+
+    <div class="dashboard-wrapper" id="dashboard">
+        <header>
+            <div class="logo-area">
+                <div class="logo-hex">A</div>
+                <div>
+                    <h1 class="brand-name">Academy <span class="admin-badge">Elite Admin</span></h1>
+                    <p id="liveClock">Loading Intelligence Service...</p>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <div class="lang-toggle">
+                    <button class="lang-btn active" onclick="setLang('uz')">UZ</button>
+                    <button class="lang-btn" onclick="setLang('ru')">RU</button>
+                    <button class="lang-btn" onclick="setLang('en')">EN</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- KPI Grid -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon"><i class="fas fa-users-viewfinder"></i></div>
+                    <div class="kpi-trend trend-up"><i class="fas fa-arrow-up"></i> 12%</div>
+                </div>
+                <span class="kpi-label" data-key="kpi_total_users">Jami foydalanuvchilar</span>
+                <div class="kpi-value" id="valTotalUsers">0</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon" style="color: var(--secondary);"><i class="fas fa-user-plus"></i></div>
+                    <div class="kpi-trend trend-up"><i class="fas fa-arrow-up"></i> 8%</div>
+                </div>
+                <span class="kpi-label" data-key="kpi_today_users">Bugungi yangilar</span>
+                <div class="kpi-value" id="valTodayUsers">0</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon" style="color: var(--warning);"><i class="fas fa-star-half-stroke"></i></div>
+                    <div class="kpi-trend trend-down"><i class="fas fa-arrow-down"></i> 2%</div>
+                </div>
+                <span class="kpi-label" data-key="kpi_avg_score">O'rtacha baho</span>
+                <div class="kpi-value" id="valAvgScore">0.0</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon" style="color: var(--success);"><i class="fas fa-inbox"></i></div>
+                    <div class="kpi-trend trend-up"><i class="fas fa-arrow-up"></i> 24%</div>
+                </div>
+                <span class="kpi-label" data-key="kpi_total_appeals">Jami murojaatlar</span>
+                <div class="kpi-value" id="valTotalAppeals">0</div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-row">
+            <div class="chart-box">
+                <div class="chart-header">
+                    <h3 class="chart-title"><i class="fas fa-chart-line"></i> <span
+                            data-key="chart_activity_title">Haftalik faollik</span></h3>
+                </div>
+                <div style="height: 350px;">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-box">
+                <div class="chart-header">
+                    <h3 class="chart-title"><i class="fas fa-chart-pie"></i> <span data-key="chart_types_title">Murojaat
+                            turlari</span></h3>
+                </div>
+                <div style="height: 350px;">
+                    <canvas id="typeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appeals Table -->
+        <div class="table-area">
+            <div class="chart-header">
+                <h3 class="chart-title"><i class="fas fa-list"></i> <span data-key="table_recent_title">Oxirgi
+                        murojaatlar</span></h3>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th data-key="th_id">#</th>
+                        <th data-key="th_type">Turi</th>
+                        <th data-key="th_user">Foydalanuvchi</th>
+                        <th data-key="th_date">Sana</th>
+                        <th data-key="th_status">Holat</th>
+                    </tr>
+                </thead>
+                <tbody id="appealsTableBody">
+                    <!-- Injected by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Broadcast Area -->
+        <div class="table-area" style="margin-bottom: 5rem;">
+            <div class="chart-header">
+                <h3 class="chart-title"><i class="fas fa-bullhorn"></i> <span data-key="title_broadcast">Xabar Yuborish
+                        (Broadcast)</span></h3>
+            </div>
+            <div class="broadcast-form">
+                <textarea id="broadcastMessage"
+                    placeholder="Foydalanuvchilarga yuboriladigan xabar matni... (HTML qo'llab-quvvatlanadi)" rows="4"
+                    style="width: 100%; background: var(--surface-accent); border: 1px solid var(--glass-border); border-radius: 16px; padding: 1rem; color: var(--text-main); font-family: var(--font-body); margin-bottom: 1rem; resize: vertical;"></textarea>
+                <button id="btnBroadcast" onclick="sendBroadcast()"
+                    style="background: var(--primary); color: var(--bg-deep); padding: 0.75rem 1.5rem; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: transform 0.2s;">
+                    <i class="fas fa-paper-plane"></i> <span data-key="btn_send_broadcast">Yuborish</span>
+                </button>
+                <p id="broadcastStatus" style="margin-top: 1rem; font-size: 0.9rem;"></p>
+            </div>
+        </div>
+
+        <footer>
+            <button class="export-btn-fixed" onclick="exportToPDF()">
+                <i class="fas fa-file-pdf"></i>
+                <span data-key="btn_export">Hisobotni yuklab olish</span>
+            </button>
+        </footer>
+    </div>
+
+    <script>
+        // CONFIG & STATE
+        const ADMIN_IDS = [2015170305, 1370651372];
+        let currentLang = 'uz';
+        let dashboardData = null;
+
+        const translations = {
+            uz: {
+                acc_denied: "KIRISH TAQIQLANGAN",
+                guard_text: "Sizda ushbu dashboardga kirish huquqi yo'q. Iltimos, Telegram bot admin menyusi orqali kiring.",
+                kpi_total_users: "Jami foydalanuvchilar",
+                kpi_today_users: "Bugungi yangilar",
+                kpi_avg_score: "O'rtacha baho",
+                kpi_total_appeals: "Jami murojaatlar",
+                chart_activity_title: "Haftalik faollik",
+                chart_types_title: "Murojaat turlari",
+                table_recent_title: "Oxirgi murojaatlar",
+                th_id: "# ID",
+                th_type: "Turi",
+                th_user: "Foydalanuvchi",
+                th_date: "Sana",
+                th_status: "Holat",
+                btn_export: "Hisobotni yuklab olish",
+                status_pending: "Ko'rib chiqilmoqda",
+                status_resolved: "Hal qilindi",
+                status_rejected: "Rad etildi",
+                type_complaint: "Shikoyat",
+                type_suggestion: "Taklif",
+                type_question: "Savol",
+                type_rating: "Baholash",
+                title_broadcast: "Xabar Yuborish (Broadcast)",
+                btn_send_broadcast: "Yuborish"
+            },
+            ru: {
+                acc_denied: "ДОСТУП ЗАПРЕЩЕН",
+                guard_text: "У вас нет прав для доступа к этой панели. Пожалуйста, войдите через админ-меню Telegram бота.",
+                kpi_total_users: "Всего пользователей",
+                kpi_today_users: "Новые сегодня",
+                kpi_avg_score: "Средняя оценка",
+                kpi_total_appeals: "Всего обращений",
+                chart_activity_title: "Еженедельная активность",
+                chart_types_title: "Типы обращений",
+                table_recent_title: "Последние обращения",
+                th_id: "# ID",
+                th_type: "Тип",
+                th_user: "Пользователь",
+                th_date: "Дата",
+                th_status: "Статус",
+                btn_export: "Скачать отчёт",
+                status_pending: "На рассмотрении",
+                status_resolved: "Решено",
+                status_rejected: "Отклонено",
+                type_complaint: "Жалоба",
+                type_suggestion: "Предложение",
+                type_question: "Вопрос",
+                type_rating: "Оценка",
+                title_broadcast: "Рассылка сообщений (Broadcast)",
+                btn_send_broadcast: "Отправить"
+            },
+            en: {
+                acc_denied: "ACCESS DENIED",
+                guard_text: "You do not have permission to access this dashboard. Please enter through the Telegram bot admin menu.",
+                kpi_total_users: "Total Users",
+                kpi_today_users: "New Today",
+                kpi_avg_score: "Avg Score",
+                kpi_total_appeals: "Total Appeals",
+                chart_activity_title: "Weekly Activity",
+                chart_types_title: "Appeal Types",
+                table_recent_title: "Recent Appeals",
+                th_id: "# ID",
+                th_type: "Type",
+                th_user: "User",
+                th_date: "Date",
+                th_status: "Status",
+                btn_export: "Download Report",
+                status_pending: "Pending",
+                status_resolved: "Resolved",
+                status_rejected: "Rejected",
+                type_complaint: "Complaint",
+                type_suggestion: "Suggestion",
+                type_question: "Question",
+                type_rating: "Rating",
+                title_broadcast: "Send Broadcast",
+                btn_send_broadcast: "Send"
+            }
+        };
+
+        // INITIALIZATION
+        window.onload = () => {
+            checkAuth();
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            if (document.getElementById('accessGuard').style.display !== 'flex') {
+                initDashboard();
+            }
+        };
+
+        function checkAuth() {
+            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+            const isLocal = !window.Telegram?.WebApp?.initData;
+
+            if (!isLocal && (!userId || !ADMIN_IDS.includes(userId))) {
+                document.getElementById('accessGuard').style.display = 'flex';
+                document.getElementById('dashboard').style.display = 'none';
+                applyTranslations('guard');
+            }
+        }
+
+        async function fetchDashboardData() {
+            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 1370651372; // Fallback for local testing
+            try {
+                const response = await fetch(`/api/admin/dashboard?user_id=${userId}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                dashboardData = await response.json();
+                console.log('Dashboard Data loaded:', dashboardData);
+            } catch (error) {
+                console.error('Failed to fetch dashboard data:', error);
+                // Fallback to minimal structure if fetch fails
+                dashboardData = {
+                    totalUsers: 0, todayUsers: 0, avgScore: 0.0, totalAppeals: 0,
+                    weekly: { labels: ['-', '-', '-', '-', '-', '-', '-'], users: [0, 0, 0, 0, 0, 0, 0], appeals: [0, 0, 0, 0, 0, 0, 0] },
+                    types: [0, 0, 0, 0],
+                    recent: []
+                };
+            }
+        }
+
+        async function initDashboard() {
+            // Fetch real data first
+            await fetchDashboardData();
+
+            // GSAP Reveal Animation
+            gsap.to('#dashboard', { opacity: 1, duration: 1, ease: "power2.out" });
+
+            // Staggered reveal for cards
+            gsap.from('.kpi-card', {
+                y: 30, opacity: 0, duration: 0.8, stagger: 0.1, ease: "back.out(1.7)"
+            });
+
+            gsap.from('.chart-box', {
+                y: 40, opacity: 0, duration: 1, delay: 0.4, stagger: 0.2, ease: "power3.out"
+            });
+
+            gsap.from('.table-area', {
+                y: 50, opacity: 0, duration: 1, delay: 0.8, ease: "power3.out"
+            });
+
+            // Start Count-up with real data
+            animateValue("valTotalUsers", 0, dashboardData.totalUsers, 1500);
+            animateValue("valTodayUsers", 0, dashboardData.todayUsers, 1500);
+            animateValue("valAvgScore", 0, dashboardData.avgScore, 1500, true);
+            animateValue("valTotalAppeals", 0, dashboardData.totalAppeals, 1500);
+
+            renderCharts();
+            renderTable();
+            setLang('uz');
+        }
+
+        // HELPERS
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateStr = now.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+            document.getElementById('liveClock').textContent = `${dateStr} | ${timeStr}`;
+        }
+
+        function animateValue(id, start, end, duration, isFloat = false) {
+            const obj = document.getElementById(id);
+            if (!obj) return;
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const current = progress * (end - start) + start;
+                obj.innerHTML = isFloat ? current.toFixed(1) : Math.floor(current);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function setLang(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase() === lang);
+            });
+            applyTranslations();
+            renderTable(); // Re-render table for status/type translations
+        }
+
+        function applyTranslations() {
+            const dict = translations[currentLang];
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if (dict[key]) el.textContent = dict[key];
+            });
+
+            const guardTitle = document.querySelector('#accessGuard h1');
+            if (guardTitle) guardTitle.textContent = dict.acc_denied;
+            const guardText = document.getElementById('guardText');
+            if (guardText) guardText.textContent = dict.guard_text;
+        }
+
+        function renderCharts() {
+            if (!dashboardData) return;
+
+            const ctxActivity = document.getElementById('activityChart').getContext('2d');
+            const cyanGrad = ctxActivity.createLinearGradient(0, 0, 0, 300);
+            cyanGrad.addColorStop(0, 'rgba(0, 229, 255, 0.3)');
+            cyanGrad.addColorStop(1, 'rgba(0, 229, 255, 0)');
+
+            const violetGrad = ctxActivity.createLinearGradient(0, 0, 0, 300);
+            violetGrad.addColorStop(0, 'rgba(123, 97, 255, 0.3)');
+            violetGrad.addColorStop(1, 'rgba(123, 97, 255, 0)');
+
+            // Activity Chart
+            new Chart(ctxActivity, {
+                type: 'line',
+                data: {
+                    labels: dashboardData.weekly.labels,
+                    datasets: [
+                        {
+                            label: 'Users',
+                            data: dashboardData.weekly.users,
+                            borderColor: '#00E5FF',
+                            backgroundColor: cyanGrad,
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Appeals',
+                            data: dashboardData.weekly.appeals,
+                            borderColor: '#7B61FF',
+                            backgroundColor: violetGrad,
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            pointHoverRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#5A6A8A', font: { family: 'JetBrains Mono' } } },
+                        x: { grid: { display: false }, ticks: { color: '#5A6A8A', font: { family: 'JetBrains Mono' } } }
+                    }
+                }
+            });
+
+            // Type Chart
+            const ctxType = document.getElementById('typeChart').getContext('2d');
+            new Chart(ctxType, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Complaint', 'Suggestion', 'Question', 'Rating'],
+                    datasets: [{
+                        data: dashboardData.types,
+                        backgroundColor: ['#FF4D6A', '#FFB547', '#00E096', '#00E5FF'],
+                        borderWidth: 0,
+                        hoverOffset: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#F0F4FF', usePointStyle: true, font: { family: 'Satoshi', weight: 'bold' }, padding: 20 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderTable() {
+            if (!dashboardData || !dashboardData.recent) return;
+            const body = document.getElementById('appealsTableBody');
+            const dict = translations[currentLang];
+            body.innerHTML = dashboardData.recent.map(item => `
+                <tr>
+                    <td style="font-family: var(--font-mono); color: var(--primary);">#${item.id}</td>
+                    <td><span class="badge-type" style="background: ${getTypeColor(item.type)}20; color: ${getTypeColor(item.type)}">${dict['type_' + item.type] || item.type}</span></td>
+                    <td style="font-weight: 700;">${item.user}</td>
+                    <td style="color: var(--text-muted);">${item.date}</td>
+                    <td>
+                        <span class="status-chip status-${getStatusColor(item.status)}">
+                            <i class="fas fa-circle" style="font-size: 0.4rem;"></i>
+                            ${dict['status_' + item.status] || item.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getTypeColor(type) {
+            const colors = { complaint: '#FF4D6A', suggestion: '#FFB547', question: '#00E096', rating: '#00E5FF' };
+            return colors[type] || '#5A6A8A';
+        }
+
+        function getStatusColor(status) {
+            const colors = { pending: 'yellow', resolved: 'green', rejected: 'red' };
+            return colors[status] || 'yellow';
+        }
+
+        async function sendBroadcast() {
+            const btn = document.getElementById('btnBroadcast');
+            const msgInput = document.getElementById('broadcastMessage');
+            const statusBox = document.getElementById('broadcastStatus');
+            const message = msgInput.value.trim();
+
+            if (!message) {
+                statusBox.textContent = "Iltimos, xabar matnini kiriting!";
+                statusBox.style.color = "var(--warning)";
+                return;
+            }
+
+            const confirmSend = confirm("Rostdan ham barcha foydalanuvchilarga ushbu xabarni yubormoqchimisiz?");
+            if (!confirmSend) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yuborilmoqda...';
+            statusBox.textContent = "";
+
+            try {
+                const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 1370651372;
+                const response = await fetch(`/api/admin/broadcast?user_id=${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusBox.textContent = result.message || "Xabar yuborish boshlandi!";
+                    statusBox.style.color = "var(--success)";
+                    msgInput.value = "";
+                } else {
+                    statusBox.textContent = result.error || "Xatolik yuz berdi";
+                    statusBox.style.color = "var(--danger)";
+                }
+            } catch (err) {
+                statusBox.textContent = "Tarmoq xatosi: " + err.message;
+                statusBox.style.color = "var(--danger)";
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> <span data-key="btn_send_broadcast">Yuborish</span>';
+                applyTranslations();
+            }
+        }
+
+        async function exportToPDF() {
+            const btn = document.querySelector('.export-btn-fixed');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+
+            try {
+                const dashboard = document.getElementById('dashboard');
+                const canvas = await html2canvas(dashboard, {
+                    backgroundColor: '#080C14',
+                    scale: 2,
+                    logging: false,
+                    useCORS: true
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgProps = pdf.getImageProperties(imgData);
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save(`Academy_Report_${new Date().getTime()}.pdf`);
+            } catch (err) {
+                console.error('PDF Export failed', err);
+                alert('Eksport qilishda xatolik yuz berdi.');
+            } finally {
+                btn.innerHTML = originalHTML;
+            }
+        }
+    </script>
+</body>
+
+</html>

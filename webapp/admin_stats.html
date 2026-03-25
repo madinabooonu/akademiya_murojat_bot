@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academy | Elite Intelligence Dashboard</title>
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Icons & CDNs -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        :root {
+            --bg-deep: #000000;
+            --surface: rgba(10, 10, 10, 0.6);
+            --surface-accent: rgba(20, 20, 20, 0.8);
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.3);
+            --secondary: #a855f7;
+            --secondary-glow: rgba(168, 85, 247, 0.3);
+            --accent: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #f43f5e;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.05);
+
+            --font-display: 'Plus Jakarta Sans', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .logo-section h1 {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+        }
+
+        /* Grid Layout matching the image */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--surface);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(15, 15, 15, 0.8);
+            box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.6);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .card-value {
+            font-family: var(--font-mono);
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+
+        .trend-up {
+            color: var(--success);
+        }
+
+        .trend-down {
+            color: var(--danger);
+        }
+
+        /* Chart Canvas Sizing */
+        .chart-container {
+            position: relative;
+            height: 150px;
+            width: 100%;
+        }
+
+        /* Large Charts */
+        .card.span-2 {
+            grid-column: span 2;
+        }
+
+        .card.h-large {
+            height: 400px;
+        }
+
+        .big-chart-container {
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        /* Special Widgets */
+        .donut-val {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .donut-val h2 {
+            font-size: 2rem;
+            color: var(--text-main);
+        }
+
+        .donut-val p {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-deep);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--surface-accent);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <header>
+            <div class="logo-section">
+                <h1>ELITE INTELLIGENCE DASHBOARD</h1>
+                <p id="liveTime" style="color: var(--text-muted); font-family: var(--font-mono); font-size: 0.8rem;">
+                </p>
+            </div>
+            <div class="admin-profile">
+                <span id="adminName" style="font-weight: 700;">Admin</span>
+                <div
+                    style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); display: inline-flex; align-items: center; justify-content: center; margin-left: 10px;">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+            </div>
+        </header>
+
+        <div class="stats-grid" id="mainGrid">
+            <!-- Row 1: KPI + Charts -->
+            <div class="card">
+                <div class="card-title">Area Graph</div>
+                <div class="card-value" style="color: var(--secondary);">49</div>
+                <div class="chart-container"><canvas id="miniArea1"></canvas></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Donut Chart</div>
+                <div style="position: relative; height: 180px;">
+                    <canvas id="mainDonut"></canvas>
+                    <div class="donut-val">
+                        <h2 id="donutCenterVal">390</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Bagplot</div>
+                <div class="chart-container"><canvas id="miniScatter"></canvas></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Bar Graph</div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div style="width: 60%;"><canvas id="sidebarHorizontal"></canvas></div>
+                    <div style="text-align: right;">
+                        <h1 style="font-size: 3rem; color: var(--primary);">57</h1>
+                        <h3 style="color: var(--secondary);">23</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="card">
+                <div class="card-title">Bar Chart</div>
+                <div class="card-value">28</div>
+                <div class="chart-container"><canvas id="miniBar1"></canvas></div>
+            </div>
+
+            <div class="card"
+                style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff;">
+                <div class="card-title" style="color: rgba(255,255,255,0.7);">Card Balance</div>
+                <div class="card-value" style="font-size: 2.5rem;">$2831</div>
+                <p style="font-family: var(--font-mono); margin-top: 1rem;">•••• •••• •••• 0000</p>
+                <i class="fas fa-wifi" style="position: absolute; right: 20px; top: 20px; opacity: 0.5;"></i>
+            </div>
+
+            <div class="card">
+                <div class="card-title">World Map Activity</div>
+                <div style="text-align: center; padding: 1rem;">
+                    <i class="fas fa-globe-asia" style="font-size: 4rem; color: var(--primary); opacity: 0.3;"></i>
+                    <div style="margin-top: 1rem;">
+                        <span style="font-size: 1.5rem; font-weight: 800;">185</span>
+                        <span style="color: var(--secondary); margin-left: 10px;">78</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Bar Chart Split</div>
+                <div class="chart-container"><canvas id="splitBar"></canvas></div>
+            </div>
+
+            <!-- Row 3: Complex Statistics -->
+            <div class="card span-2 h-large">
+                <div class="card-title">Activity Trend (Weekly)</div>
+                <div class="big-chart-container"><canvas id="mainActivityChart"></canvas></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Radar Graph</div>
+                <div style="height: 250px;"><canvas id="radarStats"></canvas></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Calendar Activity</div>
+                <div id="calendar"
+                    style="font-family: var(--font-mono); font-size: 0.8rem; text-align: center; margin-top: 1rem;">
+                    <!-- Simple mini calendar mock -->
+                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;">
+                        <div>S</div>
+                        <div>M</div>
+                        <div>T</div>
+                        <div>W</div>
+                        <div>T</div>
+                        <div>F</div>
+                        <div>S</div>
+                        <div style="opacity: 0.3;">28</div>
+                        <div style="opacity: 0.3;">29</div>
+                        <div style="opacity: 0.3;">30</div>
+                        <div style="opacity: 0.3;">31</div>
+                        <div>1</div>
+                        <div>2</div>
+                        <div>3</div>
+                        <div style="background: var(--primary); border-radius: 5px; color: var(--bg-deep);">4</div>
+                        <div>5</div>
+                        <div>6</div>
+                        <div>7</div>
+                        <div>8</div>
+                        <div>9</div>
+                        <div>10</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 4 -->
+            <div class="card span-2">
+                <div class="card-title">Time Phase Analysis</div>
+                <div class="chart-container"><canvas id="timelineChart"></canvas></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Radial Bar Chart</div>
+                <div style="position: relative; height: 180px;">
+                    <canvas id="radialBar"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Bubble Chart</div>
+                <div class="chart-container"><canvas id="bubbleChart"></canvas></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_IDS = [2015170305, 1370651372];
+        let statsData = null;
+
+        window.onload = async () => {
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            checkAuth();
+            await fetchData();
+            renderAllCharts();
+
+            // GSAP Entrance
+            gsap.from(".card", {
+                duration: 0.8,
+                y: 50,
+                opacity: 0,
+                stagger: 0.05,
+                ease: "power2.out"
+            });
+        };
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('liveTime').innerText = now.toLocaleString('uz-UZ');
+        }
+
+        function checkAuth() {
+            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 1370651372;
+            if (window.Telegram?.WebApp?.initData && !ADMIN_IDS.includes(userId)) {
+                document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20%;'>KIRISH TAQIQLANGAN</h1>";
+            }
+            if (window.Telegram?.WebApp?.initDataUnsafe?.user?.first_name) {
+                document.getElementById('adminName').innerText = window.Telegram.WebApp.initDataUnsafe.user.first_name;
+            }
+        }
+
+        async function fetchData() {
+            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 1370651372;
+            try {
+                const response = await fetch(`/api/admin/dashboard?user_id=${userId}`);
+                statsData = await response.json();
+                console.log("Data Received:", statsData);
+            } catch (err) {
+                console.error("Fetch Error:", err);
+            }
+        }
+
+        function renderAllCharts() {
+            if (!statsData) return;
+
+            Chart.defaults.color = '#A080C0';
+            Chart.defaults.font.family = 'Satoshi';
+
+            // 1. Mini Area Graph
+            new Chart(document.getElementById('miniArea1'), {
+                type: 'line',
+                data: {
+                    labels: statsData.weekly.labels,
+                    datasets: [{
+                        data: statsData.weekly.users,
+                        borderColor: '#FF007F',
+                        backgroundColor: 'rgba(255, 0, 127, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: { plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+            });
+
+            // 2. Main Donut
+            const facultyKeys = Object.keys(statsData.faculty_distribution);
+            const facultyVals = Object.values(statsData.faculty_distribution);
+            new Chart(document.getElementById('mainDonut'), {
+                type: 'doughnut',
+                data: {
+                    labels: facultyKeys,
+                    datasets: [{
+                        data: facultyVals,
+                        backgroundColor: ['#CC00FF', '#FF007F', '#00FFCC', '#FFFF00', '#FF3333'],
+                        borderWidth: 0,
+                        cutout: '80%'
+                    }]
+                },
+                options: { plugins: { legend: { display: false } } }
+            });
+            document.getElementById('donutCenterVal').innerText = statsData.totalUsers;
+
+            // 3. Mini Bar
+            new Chart(document.getElementById('miniBar1'), {
+                type: 'bar',
+                data: {
+                    labels: statsData.weekly.labels,
+                    datasets: [{
+                        data: statsData.weekly.appeals,
+                        backgroundColor: '#CC00FF',
+                        borderRadius: 5
+                    }]
+                },
+                options: { plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+            });
+
+            // 4. Main Activity Line
+            new Chart(document.getElementById('mainActivityChart'), {
+                type: 'line',
+                data: {
+                    labels: statsData.weekly.labels,
+                    datasets: [
+                        {
+                            label: 'Foydalanuvchilar',
+                            data: statsData.weekly.users,
+                            borderColor: '#CC00FF',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Murojaatlar',
+                            data: statsData.weekly.appeals,
+                            borderColor: '#FF007F',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // 5. Radar Stats
+            new Chart(document.getElementById('radarStats'), {
+                type: 'radar',
+                data: {
+                    labels: ['Sifat', 'Tezlik', 'Foyda', 'Dizayn', 'Darslar'],
+                    datasets: [{
+                        label: 'Ko\'rsatkichlar',
+                        data: [80, 70, 90, 60, 85],
+                        borderColor: '#00FFCC',
+                        backgroundColor: 'rgba(0, 255, 204, 0.2)'
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: { r: { grid: { color: 'rgba(255,255,255,0.1)' }, angleLines: { color: 'rgba(255,255,255,0.1)' } } }
+                }
+            });
+
+            // 6. Horizontal Bar
+            new Chart(document.getElementById('sidebarHorizontal'), {
+                type: 'bar',
+                data: {
+                    labels: ['A', 'B', 'C', 'D'],
+                    datasets: [{
+                        data: [10, 20, 15, 25],
+                        backgroundColor: ['#CC00FF', '#FF007F', '#CC00FF', '#FF007F'],
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { display: false }, y: { display: false } }
+                }
+            });
+
+            // 7. Split Bar
+            new Chart(document.getElementById('splitBar'), {
+                type: 'bar',
+                data: {
+                    labels: ['1', '2', '3', '4', '5'],
+                    datasets: [
+                        { data: [5, 10, 8, 12, 7], backgroundColor: '#CC00FF', borderRadius: 2 },
+                        { data: [3, 7, 5, 9, 4], backgroundColor: '#FF007F', borderRadius: 2 }
+                    ]
+                },
+                options: { plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+            });
+        }
+    </script>
+</body>
+
+</html>
