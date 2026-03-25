@@ -89,8 +89,20 @@ function updateNavbar(viewId) {
 }
 
 function t(key) {
-    if (!state.translations || Object.keys(state.translations).length === 0) return key;
-    return state.translations[key] || key;
+    if (!state.translations || Object.keys(state.translations).length === 0) return formatLabel(key);
+    return state.translations[key] || formatLabel(key);
+}
+
+function formatLabel(str) {
+    if (!str || typeof str !== 'string') return str;
+    // Skip if it doesn't look like snake_case or is very short
+    if (!str.includes('_') && str === str.toLowerCase()) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+    return str
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
 }
 
 function applyTranslations() {
@@ -785,7 +797,7 @@ function getTranslateName(code) {
         ...(state.config.faculties || []).reduce((acc, f) => ({ ...acc, [f.code]: f.translation_key }), {})
     };
     const key = allMapping[code];
-    return key ? t(key) : code;
+    return key ? t(key) : formatLabel(code);
 }
 
 function updateWeeklyChart(data) {

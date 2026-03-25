@@ -158,6 +158,14 @@ function renderCharts(data) {
     });
 }
 
+function formatLabel(str) {
+    if (!str || typeof str !== 'string') return str;
+    return str
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+}
+
 async function loadActivity() {
     const res = await fetch(`${API_BASE}/activity?user_id=${USER_ID}`);
     const data = await res.json();
@@ -169,7 +177,7 @@ async function loadActivity() {
             <tr>
                 <td style="color: var(--text-muted)">${formatTime(row.time)}</td>
                 <td style="font-weight: 600">ID: ${row.user_id}</td>
-                <td><span class="badge ${getActionClass(row.action)}">${row.action}</span></td>
+                <td><span class="badge ${getActionClass(row.action)}">${formatLabel(row.action)}</span></td>
                 <td><span class="badge badge-${row.source}">${row.source.toUpperCase()}</span></td>
             </tr>
         `;
