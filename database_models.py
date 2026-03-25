@@ -599,6 +599,23 @@ def get_all_directions_dict():
     return directions
 
 
+def get_all_directions_with_faculty():
+    """Barcha yo'nalishlarni faculty_code bilan birga list formatda olish"""
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT code, faculty_code, translation_key FROM directions
+        WHERE is_active = 1
+        ORDER BY faculty_code, sort_order
+    ''')
+    directions = [
+        {'code': row[0], 'faculty_code': row[1], 'translation_key': row[2]}
+        for row in cursor.fetchall()
+    ]
+    conn.close()
+    return directions
+
+
 def add_direction(code, faculty_code, translation_key, sort_order=0):
     """Yangi yo'nalish qo'shish"""
     conn = sqlite3.connect(DATABASE_NAME)
