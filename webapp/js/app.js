@@ -644,7 +644,15 @@ function renderRulesList() {
     ];
 
     rules.forEach(rule => {
-        appendProOption(container, t(rule.title), rule.icon, () => openRuleDetail(rule.id));
+        const pdfPath = state.config.pdf_files?.[rule.id];
+        appendProOption(container, t(rule.title), rule.icon, () => {
+            if (pdfPath) {
+                vibrate('medium');
+                tg?.openLink(`${API_BASE}/${pdfPath}`);
+            } else {
+                openRuleDetail(rule.id);
+            }
+        });
     });
 }
 
