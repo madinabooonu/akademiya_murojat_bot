@@ -64,11 +64,11 @@ async function fetchConfig() {
 
         if (state.config.is_admin) {
             vibrate('medium');
-            document.getElementById('navAdmin')?.classList.remove('hidden');
+            document.getElementById('navadminDashboardView')?.classList.remove('hidden');
         } else {
             // For troubleshooting
             if (user_id.toString() === '2015170305' || user_id.toString() === '1370651372') {
-                document.getElementById('navAdmin')?.classList.remove('hidden');
+                document.getElementById('navadminDashboardView')?.classList.remove('hidden');
             }
         }
     } catch (err) {
@@ -78,11 +78,8 @@ async function fetchConfig() {
 }
 
 function updateNavbar(viewId) {
-    document.querySelectorAll('.nav-item-floating').forEach(btn => {
-        btn.classList.remove('active');
-        const viewName = viewId.replace('View', '');
-        const targetId = `nav${viewName.charAt(0).toUpperCase()}${viewName.slice(1)}`;
-        if (btn.id === targetId) btn.classList.add('active');
+    document.querySelectorAll('.nav-elite-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id === `nav${viewId}`);
     });
 }
 
@@ -130,10 +127,10 @@ function showView(viewId, animate = true) {
     if (!targetView) return;
 
     // Close any open menus/overlays
-    const m = document.getElementById('langMenu');
+    const m = document.getElementById('langModal');
     const o = document.getElementById('langOverlay');
-    if (m && !m.classList.contains('hidden')) {
-        m.classList.add('hidden');
+    if (m && m.style.display !== 'none') {
+        m.style.display = 'none';
         if (o) { o.style.display = 'none'; o.style.opacity = '0'; }
     }
 
@@ -619,13 +616,16 @@ window.vibrate = vibrate;
 
 function appendProOption(container, label, icon, onClick) {
     const div = document.createElement('div');
-    div.className = 'option-pro group';
-    div.onclick = onClick;
+    div.className = 'w-full flex items-center gap-5 p-5 rounded-3xl elite-glass border-white/5 active:scale-95 transition-all group cursor-pointer';
+    div.onclick = () => { vibrate('light'); onClick(); };
     div.innerHTML = `
-        <div class="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-white/10 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-all">
+        <div class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-all shadow-xl shadow-black/20">
             <i data-lucide="${icon}" class="w-6 h-6"></i>
         </div>
-        <span class="font-extrabold text-slate-700 dark:text-slate-200 group-hover:translate-x-1 transition-transform">${label}</span>
+        <div class="flex-1">
+            <span class="font-black text-sm text-slate-200 uppercase tracking-tight">${label}</span>
+        </div>
+        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-600 group-hover:text-primary transition-all"></i>
     `;
     container.appendChild(div);
     if (window.lucide) window.lucide.createIcons();
@@ -714,51 +714,18 @@ async function fetchAdminDashboard() {
         const resp = await fetch(`${API_BASE}/api/admin/stats?user_id=${user_id}`);
         const stats = await resp.json();
 
-        // 1. Text & Totals
-        const total = stats.total || 0;
-        const today = stats.today || 0;
-        const week = stats.week || 0;
-        const month = stats.month || 0;
+        // 1. Stats
+        animateCount('valTotalUsers', stats.total_users || 0);
+        animateCount('valTotalAppeals', stats.total || 0);
 
-        animateCount('statsTotalDisplay', total);
-
-        // 2. Pro Gauges
-        renderGaugeChart('gaugeToday', Math.min(100, Math.round((today / (month || 1)) * 100)), '#6366f1');
-        renderGaugeChart('gaugeWeek', Math.min(100, Math.round((week / (month || 1)) * 100)), '#a855f7');
-        renderGaugeChart('gaugeMonth', Math.min(100, Math.round((month / (total || 1)) * 100)), '#ec4899');
-        renderGaugeChart('gaugeTotal', 100, '#10b981'); // Reference 100%
-
-        // 3. Main Weekly Activity (Area Chart)
+        // 2. Charts
         updateWeeklyChart(stats.weekly || []);
+        if (stats.by_type) updateTypeChart(stats.by_type);
+        if (stats.by_direction) updateDirectionChart(stats.by_direction);
+        if (stats.by_course) updateCourseChart(stats.by_course);
 
-        // 3. Complaint Type Distribution
-        updateTypeChart(stats.by_type || []);
-
-        // 4. Direction Distribution
-        updateDirectionChart(stats.by_direction || []);
-
-        // 5. Course Distribution
-        updateCourseChart(stats.by_course || []);
-
-        // 4. Top Direction Highlight
-        if (stats.top_direction && stats.top_direction[0]) {
-            const topDirNameEl = document.getElementById('topDirectionName');
-            const topDirCard = document.getElementById('topDirectionCard');
-            if (topDirNameEl && topDirCard) {
-                topDirNameEl.textContent = getTranslateName(stats.top_direction[0]);
-                gsap.to(topDirCard, { opacity: 1, y: 0, duration: 0.6, delay: 0.5 });
-            }
-
-            // Sync with badge in chart area
-            const badgeName = document.getElementById('topDirectionBadgeName');
-            const badge = document.getElementById('topDirectionBadge');
-            if (badgeName && badge) {
-                badgeName.textContent = getTranslateName(stats.top_direction[0]);
-                badge.style.opacity = '1';
-            }
-        }
-    } catch (err) {
-        console.error('Admin Fetch Error', err);
+    } catch (e) {
+        console.error('Admin stats error:', e);
     }
 }
 
@@ -1147,28 +1114,40 @@ function closeModal() {
 window.closeModal = closeModal;
 window.showAdminSettings = showAdminSettings;
 window.toggleLangMenu = () => {
-    const m = document.getElementById('langMenu');
+    const m = document.getElementById('langModal');
     const o = document.getElementById('langOverlay');
-    if (m.classList.contains('hidden')) {
+    if (!m || !o) return;
+
+    if (m.style.display === 'none' || !m.style.display) {
         renderLangOptions();
-        m.classList.remove('hidden');
-        if (o) { o.style.display = 'block'; gsap.to(o, { opacity: 1, duration: 0.3 }); }
-        gsap.fromTo(m, { opacity: 0, scale: 0.8, y: -20 }, { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: "back.out(1.7)" });
+        m.style.display = 'block';
+        o.classList.remove('hidden');
+        gsap.to(o, { opacity: 1, duration: 0.3 });
+        gsap.fromTo(m, { opacity: 0, scale: 0.8, yPercent: -40 }, { opacity: 1, scale: 1, yPercent: -50, duration: 0.5, ease: "back.out(1.7)" });
     } else {
-        if (o) gsap.to(o, { opacity: 0, duration: 0.2, onComplete: () => o.style.display = 'none' });
-        gsap.to(m, { opacity: 0, scale: 0.8, y: -20, duration: 0.2, onComplete: () => m.classList.add('hidden') });
+        gsap.to(o, { opacity: 0, duration: 0.2, onComplete: () => o.classList.add('hidden') });
+        gsap.to(m, { opacity: 0, scale: 0.8, yPercent: -40, duration: 0.2, onComplete: () => m.style.display = 'none' });
     }
 };
 
 function renderLangOptions() {
-    const m = document.getElementById('langMenu');
-    const langs = { uz: 'O\'zbekcha', ru: 'Русский', en: 'English' };
-    m.innerHTML = `<div class="p-2 space-y-1">` + Object.entries(langs).map(([code, name]) => `
-        <button onclick="changeLang('${code}')" class="w-full text-left px-4 py-3 text-sm font-bold rounded-2xl hover:bg-primary hover:text-white transition-all flex items-center justify-between group">
-            ${name}
-            ${state.lang === code ? '<div class="w-1.5 h-1.5 rounded-full bg-primary group-hover:bg-white"></div>' : ''}
+    const container = document.getElementById('langContainer');
+    if (!container) return;
+    const langs = [
+        { code: 'uz', name: 'O\'zbekcha', icon: '🇺🇿' },
+        { code: 'ru', name: 'Русский', icon: '🇷🇺' },
+        { code: 'en', name: 'English', icon: '🇺🇸' }
+    ];
+
+    container.innerHTML = langs.map(l => `
+        <button onclick="changeLang('${l.code}')" class="w-full flex items-center justify-between p-4 rounded-2xl elite-glass hover:bg-primary/20 transition-all group border-0">
+            <div class="flex items-center gap-3">
+                <span class="text-xl">${l.icon}</span>
+                <span class="font-black text-sm text-slate-200">${l.name}</span>
+            </div>
+            ${state.lang === l.code ? '<div class="w-2 h-2 rounded-full bg-primary shadow-lg shadow-primary/50"></div>' : ''}
         </button>
-    `).join('') + `</div>`;
+    `).join('');
 }
 
 window.changeLang = async (code) => {
@@ -1180,7 +1159,14 @@ window.changeLang = async (code) => {
 
 function hideSkeleton() {
     const s = document.getElementById('appSkeleton');
-    gsap.to(s, { opacity: 0, duration: 0.5, onComplete: () => s.style.display = 'none' });
+    if (s) {
+        gsap.to(s, {
+            opacity: 0,
+            duration: 0.6,
+            ease: "power2.inOut",
+            onComplete: () => s.style.display = 'none'
+        });
+    }
 }
 
 function showOverlayLoading() {

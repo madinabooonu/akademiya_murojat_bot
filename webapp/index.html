@@ -98,42 +98,42 @@
                 background-position: right center;
             }
             .card-pro { 
-                @apply bg-white dark:bg-dark-card border border-slate-100 dark:border-white/5 rounded-3xl p-6 shadow-sm transition-all duration-700;
-                @apply hover:shadow-2xl hover:-translate-y-2;
-                backdrop-filter: blur(16px);
-                box-shadow: inset 0 0 20px 0 rgba(255, 255, 255, 0.02);
+                @apply relative overflow-hidden transition-all duration-700;
+                backdrop-filter: blur(24px);
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            }
+            .card-pro:hover {
+                background: rgba(255, 255, 255, 0.05);
+                border-color: var(--primary);
+                transform: translateY(-5px);
             }
             .input-pro { 
-                @apply w-full bg-slate-50 border-2 border-slate-200 focus:border-primary focus:bg-white rounded-[28px] py-4 px-6 focus:ring-8 focus:ring-primary/5 outline-none transition-all text-base font-semibold text-slate-800 placeholder:text-slate-400; 
-                @apply dark:bg-dark-surface/50 dark:border-white/10 dark:focus:bg-dark-surface/80 dark:text-white dark:placeholder:text-slate-500;
-                box-shadow: inset 0 2px 8px rgba(0,0,0,0.05);
+                @apply w-full border-0 rounded-[28px] py-5 px-8 outline-none transition-all text-base font-black text-white placeholder:text-slate-500; 
+                background: rgba(255, 255, 255, 0.05);
+                box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+            }
+            .input-pro:focus {
+                background: rgba(255, 255, 255, 0.08);
+                box-shadow: 0 0 0 4px var(--primary-glow), inset 0 2px 10px rgba(0,0,0,0.2);
             }
             .label-pro {
-                @apply flex items-center gap-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] mb-3 ml-2;
+                @apply flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4 ml-4 italic;
+            }
+            .btn-pro {
+                @apply relative flex items-center justify-center gap-3 py-5 px-8 rounded-[30px] font-black text-sm uppercase tracking-widest text-white transition-all active:scale-95 overflow-hidden;
+                background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+                box-shadow: 0 10px 30px var(--primary-glow);
+            }
+            .btn-pro:hover {
+                filter: brightness(1.1);
+                box-shadow: 0 15px 40px var(--primary-glow);
             }
             .option-pro { 
-                @apply bg-white dark:bg-dark-surface/40 border-[1.5px] border-slate-100 dark:border-white/5 hover:border-primary/40 p-5 rounded-[28px] transition-all cursor-pointer flex items-center gap-4 active:scale-[0.98] group relative overflow-hidden; 
+                @apply w-full flex items-center gap-5 p-5 rounded-3xl elite-glass border-white/5 active:scale-95 transition-all group cursor-pointer; 
             }
-            .option-pro.selected { 
-                @apply border-primary bg-primary/5 dark:bg-primary/20 ring-8 ring-primary/5; 
-            }
-            .nav-floating {
-                @apply fixed bottom-8 left-1/2 -translate-x-1/2 w-[92%] max-w-md h-20 glass-morphism rounded-[40px] z-[500] flex items-center justify-around px-4;
-                border-top: 1px solid rgba(255,255,255,0.1);
-            }
-            .nav-item-floating {
-                @apply flex flex-col items-center justify-center gap-1.5 text-slate-400 transition-all duration-300 relative w-16 h-16 rounded-3xl;
-            }
-            .nav-item-floating.active {
-                @apply text-primary scale-110 bg-primary/10;
-            }
-            .active-dot {
-                @apply absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full blur-[1px] opacity-0 transition-opacity;
-                box-shadow: 0 0 10px var(--primary);
-            }
-            .nav-item-floating.active .active-dot {
-                @apply opacity-100;
-            }
+
         }
         
         .pt-safe { padding-top: max(1rem, env(safe-area-inset-top)); }
@@ -166,92 +166,144 @@
             background-color: rgba(15, 23, 42, 0.9) !important;
             border-color: #6366f1 !important;
         }
-        .dark .input-pro::placeholder {
-            color: rgba(255, 255, 255, 0.3) !important;
+        :root {
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.2);
+            --secondary: #a855f7;
+            --accent: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #f43f5e;
+            --dark-bg: #08080c;
+            --surface: rgba(255, 255, 255, 0.05);
+            --surface-hover: rgba(255, 102, 241, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
 
-        #langOverlay {
+        .elite-glass {
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .dark .elite-glass {
+            background: rgba(10, 10, 15, 0.7);
+        }
+
+        #appSkeleton {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(8px);
-            z-index: 550;
-            display: none;
+            z-index: 999;
+            background: var(--dark-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lang-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 85%;
+            max-width: 320px;
+            z-index: 600;
             opacity: 0;
+            display: none;
         }
     </style>
 </head>
 
-<body class="font-sans antialiased select-none">
+<body class="bg-[#08080c] text-slate-100 font-sans antialiased overflow-x-hidden">
 
+    <!-- ELITE COMPONENTS -->
+    <div id="appSkeleton">
+        <div class="flex flex-col items-center gap-6">
+            <div class="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-3xl animate-pulse"></div>
+            <div class="w-24 h-2 bg-primary/20 rounded-full overflow-hidden">
+                <div class="h-full bg-primary animate-[loading_2s_ease-in-out_infinite]"></div>
+            </div>
+        </div>
     </div>
 
-    <!-- Background Elements -->
-    <div id="langOverlay" onclick="toggleLangMenu()"></div>
+    <div id="langOverlay" onclick="toggleLangMenu()"
+        class="fixed inset-0 bg-black/60 backdrop-blur-md z-[550] hidden opacity-0"></div>
 
-    <!-- Header -->
+    <div id="langModal" class="lang-modal elite-glass rounded-[40px] p-8 space-y-6 shadow-2xl overflow-hidden">
+        <div class="text-center space-y-2">
+            <h3 class="text-xl font-black tracking-tight" data-i18n="choose_language">Tilni tanlang / Выберите язык</h3>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest opacity-60">Academy Intelligence
+            </p>
+        </div>
+        <div id="langContainer" class="space-y-3">
+            <!-- Dynamic Buttons -->
+        </div>
+    </div>
+
+    <!-- ELITE HEADER -->
     <header
-        class="fixed top-0 left-0 right-0 z-50 py-4 px-6 flex items-center justify-between glass-morphism border-b-0 rounded-b-3xl">
-        <div class="flex items-center gap-4">
+        class="fixed top-4 left-4 right-4 z-50 h-16 elite-glass rounded-3xl flex items-center justify-between px-6 shadow-xl">
+        <div class="flex items-center gap-3">
             <div
-                class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 relative group">
-                <div
-                    class="absolute inset-0 bg-primary/40 blur-[15px] rounded-full opacity-50 group-hover:opacity-100 transition-opacity">
-                </div>
-                <i data-lucide="zap" class="w-6 h-6 text-white relative z-10"></i>
+                class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center relative overflow-hidden group">
+                <div class="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <i data-lucide="zap" class="w-5 h-5 text-white"></i>
             </div>
             <div>
-                <h1
-                    class="text-lg font-black font-display tracking-tight text-slate-800 dark:text-white uppercase tracking-tighter">
-                    Akademiya</h1>
-                <div class="flex items-center gap-1.5 opacity-60">
-                    <div class="w-1 h-1 rounded-full bg-primary animate-pulse"></div>
-                    <p class="text-[8px] font-black tracking-[0.2em] uppercase">Online Platform</p>
-                </div>
+                <h1 class="text-sm font-black tracking-tight uppercase">Akademiya</h1>
+                <p class="text-[7px] font-black tracking-[0.3em] uppercase text-primary/80">Interactive</p>
             </div>
         </div>
 
-        <div class="relative">
-            <button onclick="toggleLangMenu()"
-                class="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 flex items-center justify-center group active:scale-90 transition-all">
-                <span id="currentLang" class="font-black text-xs text-slate-600 dark:text-slate-300 uppercase">UZ</span>
-            </button>
-            <div id="langMenu"
-                class="absolute top-16 right-0 w-36 glass-morphism rounded-3xl hidden z-[600] overflow-hidden shadow-2xl border border-white/20">
-                <!-- Injected via JS -->
-            </div>
-        </div>
+        <button onclick="toggleLangMenu()"
+            class="h-10 px-4 rounded-xl bg-white/5 border border-white/5 active:scale-95 transition-all text-[10px] font-black tracking-widest">
+            <span id="currentLang">UZ</span>
+        </button>
     </header>
 
     <!-- Main Content -->
     <main id="mainContent" class="pt-24 pb-28 px-4 max-w-lg mx-auto min-h-screen">
 
-        <!-- HOME -->
-        <section id="homeView" class="view space-y-12">
+        <section id="homeView" class="view space-y-10">
+            <!-- ELITE WELCOME CARD -->
             <div
-                class="card-pro bg-gradient-to-br from-[#1e1b4b] via-[#4338ca] to-[#6d28d9] text-white border-0 overflow-hidden relative p-12 group min-h-[320px] flex flex-col justify-center">
-                <div class="relative z-10 space-y-8">
-                    <div class="space-y-4">
+                class="card-pro elite-glass border-0 overflow-hidden relative p-10 min-h-[280px] flex flex-col justify-center rounded-[40px] shadow-2xl">
+                <div class="relative z-10 space-y-6">
+                    <div class="space-y-2">
                         <h2 class="text-3xl font-black leading-tight tracking-tighter" data-i18n="welcome_title">Xush
                             kelibsiz!</h2>
-                        <p class="text-indigo-100/70 text-base font-bold leading-relaxed max-w-[280px]"
+                        <p class="text-slate-400 text-sm font-bold leading-relaxed max-w-[240px]"
                             data-i18n="welcome_text">Platformamizga xush kelibsiz. Bot barcha funksiyalaridan
                             foydalaning.</p>
                     </div>
                 </div>
 
-                <!-- Advanced Background Elements -->
-                <div
-                    class="absolute -right-20 -top-20 w-96 h-96 bg-primary/30 rounded-full blur-[120px] group-hover:bg-primary/40 transition-all duration-1000 rotate-12">
-                </div>
-                <div
-                    class="absolute -left-20 -bottom-20 w-80 h-80 bg-secondary/30 rounded-full blur-[100px] group-hover:bg-secondary/40 transition-all duration-1000 -rotate-12">
-                </div>
+                <!-- Abstract GFX -->
+                <div class="absolute -right-16 -top-16 w-64 h-64 bg-primary/20 rounded-full blur-[80px]"></div>
+                <div class="absolute -left-16 -bottom-16 w-64 h-64 bg-secondary/20 rounded-full blur-[80px]"></div>
+            </div>
 
-                <!-- Particles Decoration -->
-                <div class="absolute inset-0 opacity-10 mix-blend-overlay pointer-events-none"
-                    style="background-image: radial-gradient(circle, white 1px, transparent 1px); background-size: 24px 24px;">
-                </div>
+            <!-- KEY ACTIONS GRID -->
+            <div class="grid grid-cols-2 gap-6">
+                <button onclick="vibrate('medium'); showView('complaintView')"
+                    class="card-pro elite-glass p-8 flex flex-col items-center justify-center gap-4 group active:scale-95 transition-all text-center rounded-[32px] border-white/5">
+                    <div
+                        class="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white group-hover:rotate-6 transition-all duration-500">
+                        <i data-lucide="message-circle" class="w-8 h-8"></i>
+                    </div>
+                    <span class="font-black text-sm uppercase tracking-tight" data-i18n="btn_complaint">Murojaat</span>
+                </button>
+
+                <button onclick="vibrate('medium'); showView('ratingView')"
+                    class="card-pro elite-glass p-8 flex flex-col items-center justify-center gap-4 group active:scale-95 transition-all text-center rounded-[32px] border-white/5">
+                    <div
+                        class="w-16 h-16 rounded-3xl bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white group-hover:-rotate-6 transition-all duration-500">
+                        <i data-lucide="star" class="w-8 h-8"></i>
+                    </div>
+                    <span class="font-black text-sm uppercase tracking-tight"
+                        data-i18n="btn_lesson_rating">Baholash</span>
+                </button>
             </div>
 
             <div class="grid grid-cols-2 gap-8">
@@ -281,107 +333,128 @@
                 </button>
             </div>
 
+            <!-- QUICK SERVICES -->
             <div class="space-y-4">
                 <div class="flex items-center justify-between px-2">
-                    <h3 class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]"
-                        data-i18n="other_services">Xizmatlar</h3>
-                    <div class="h-px bg-slate-200 dark:bg-white/5 flex-1 ml-4"></div>
+                    <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600"
+                        data-i18n="other_services">Boshqa xizmatlar</h3>
+                    <div class="h-px bg-white/5 flex-1 ml-4"></div>
                 </div>
-                <div class="grid grid-cols-1 gap-4">
+
+                <div class="grid grid-cols-1 gap-4 pb-12">
                     <div onclick="vibrate('light'); showView('rulesView')"
-                        class="card-pro flex items-center justify-between group cursor-pointer hover:border-primary/30">
+                        class="card-pro elite-glass p-6 flex items-center justify-between group cursor-pointer rounded-[32px] border-white/5">
                         <div class="flex items-center gap-5">
                             <div
-                                class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+                                class="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
                                 <i data-lucide="shield-check" class="w-6 h-6"></i>
                             </div>
-                            <div>
-                                <span class="font-extrabold block text-slate-800 dark:text-slate-100"
+                            <div class="space-y-0.5">
+                                <span class="font-black text-sm block uppercase tracking-tight"
                                     data-i18n="btn_rules">Tartib qoidalar</span>
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter"
-                                    data-i18n="rules_subtitle">Ichki
-                                    intizom va qoidalar</span>
+                                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest"
+                                    data-i18n="rules_subtitle">Academy Protocol</span>
                             </div>
                         </div>
-                        <div
-                            class="w-8 h-8 rounded-full bg-slate-50 dark:bg-white/5 flex items-center justify-center group-hover:translate-x-1 transition-transform">
-                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
-                        </div>
+                        <i data-lucide="chevron-right"
+                            class="w-4 h-4 text-slate-600 group-hover:translate-x-1 transition-transform"></i>
                     </div>
+
                     <div onclick="vibrate('light'); showView('surveyView')"
-                        class="card-pro flex items-center justify-between group cursor-pointer hover:border-secondary/30">
+                        class="card-pro elite-glass p-6 flex items-center justify-between group cursor-pointer rounded-[32px] border-white/5">
                         <div class="flex items-center gap-5">
                             <div
-                                class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+                                class="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
                                 <i data-lucide="clipboard-list" class="w-6 h-6"></i>
                             </div>
-                            <div>
-                                <span class="font-extrabold block text-slate-800 dark:text-slate-100"
+                            <div class="space-y-0.5">
+                                <span class="font-black text-sm block uppercase tracking-tight"
                                     data-i18n="btn_survey">So'rovnomalar</span>
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter"
-                                    data-i18n="survey_subtitle">Ochiq
-                                    ijtimoiy so'rovlar</span>
+                                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest"
+                                    data-i18n="survey_subtitle">Social Feedback</span>
                             </div>
                         </div>
-                        <div
-                            class="w-8 h-8 rounded-full bg-slate-50 dark:bg-white/5 flex items-center justify-center group-hover:translate-x-1 transition-transform">
-                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
-                        </div>
+                        <i data-lucide="chevron-right"
+                            class="w-4 h-4 text-slate-600 group-hover:translate-x-1 transition-transform"></i>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- COMPLAINT -->
+        <!-- COMPLAINT VIEW -->
         <section id="complaintView" class="view space-y-8">
-            <div class="space-y-2">
-                <h2 class="text-3xl font-black tracking-tight" data-i18n="btn_complaint">Murojaat</h2>
-                <p class="text-slate-400 font-medium text-sm">Barcha maydonlarni to'g'ri to'ldiring</p>
+            <div class="flex items-center justify-between px-2">
+                <button onclick="showView('homeView')"
+                    class="w-12 h-12 rounded-2xl elite-glass flex items-center justify-center active:scale-90 transition-all">
+                    <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                </button>
+                <div class="text-right">
+                    <h2 class="text-lg font-black tracking-tight uppercase" data-i18n="nav_complaint">Murojaat</h2>
+                    <p class="text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em]">Step-by-step Wizard</p>
+                </div>
             </div>
-            <div id="complaintFormWrapper" class="relative overflow-hidden">
-                <div id="complaintStepContainer" class="space-y-6"></div>
+
+            <div class="card-pro elite-glass p-8 min-h-[450px] relative overflow-hidden flex flex-col rounded-[40px]">
+                <div id="complaintStepContainer" class="flex-1"></div>
             </div>
         </section>
 
-        <!-- RATING -->
+        <!-- RATING VIEW -->
         <section id="ratingView" class="view space-y-8">
-            <div class="flex items-center justify-between">
-                <div class="space-y-2">
-                    <h2 class="text-3xl font-black tracking-tight" data-i18n="btn_lesson_rating">Baholash</h2>
-                    <p id="ratingStepInfo" class="text-slate-400 font-bold text-xs uppercase tracking-widest">Step 1 of
-                        9</p>
-                </div>
-                <div class="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center text-primary relative">
-                    <svg class="w-12 h-12 -rotate-90">
-                        <circle cx="24" cy="24" r="20" fill="none" class="stroke-slate-200 dark:stroke-white/5"
-                            stroke-width="4" />
-                        <circle id="ratingCircleProgress" cx="24" cy="24" r="20" fill="none" class="stroke-primary"
-                            stroke-width="4" stroke-dasharray="125.6" stroke-dashoffset="125.6"
-                            stroke-linecap="round" />
-                    </svg>
-                    <span id="ratingPercentLabel" class="absolute text-[10px] font-black">0%</span>
+            <div class="flex items-center justify-between px-2">
+                <button onclick="showView('homeView')"
+                    class="w-12 h-12 rounded-2xl elite-glass flex items-center justify-center active:scale-90 transition-all">
+                    <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                </button>
+                <div class="text-right">
+                    <h2 class="text-lg font-black tracking-tight uppercase" data-i18n="btn_lesson_rating">Baholash</h2>
+                    <p id="ratingStepInfo" class="text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em]">
+                        Academy Quality Check</p>
                 </div>
             </div>
 
-            <div class="w-full h-1.5 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
-                <div id="ratingProgressBar"
-                    class="h-full bg-gradient-to-r from-primary to-secondary progress-glow transition-all duration-700"
-                    style="width: 0%"></div>
+            <div class="card-pro elite-glass p-8 min-h-[450px] relative overflow-hidden rounded-[40px] flex flex-col">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div id="ratingProgressBar"
+                            class="h-full bg-primary shadow-[0_0_15px_var(--primary-glow)] transition-all duration-700"
+                            style="width: 0%"></div>
+                    </div>
+                    <div class="ml-6 w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-[10px] font-black"
+                        id="ratingPercentLabel">0%</div>
+                </div>
+                <div id="ratingStepContainer" class="flex-1"></div>
             </div>
-
-            <div id="ratingStepContainer" class="min-h-[400px]"></div>
         </section>
 
-        <!-- RULES -->
+        <!-- RULES VIEW -->
         <section id="rulesView" class="view space-y-8">
-            <h2 class="text-3xl font-black tracking-tight" data-i18n="btn_rules">Tartiblar</h2>
-            <div id="rulesList" class="space-y-4"></div>
+            <div class="flex items-center justify-between px-2">
+                <button onclick="showView('homeView')"
+                    class="w-12 h-12 rounded-2xl elite-glass flex items-center justify-center active:scale-90 transition-all">
+                    <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                </button>
+                <div class="text-right">
+                    <h2 class="text-lg font-black tracking-tight uppercase" data-i18n="btn_rules">Tartiblar</h2>
+                    <p class="text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em]">Academy Protocol</p>
+                </div>
+            </div>
+            <div id="rulesList" class="space-y-4 pb-12"></div>
         </section>
 
-        <!-- SURVEY -->
+        <!-- SURVEY VIEW -->
         <section id="surveyView" class="view space-y-8">
-            <h2 class="text-3xl font-black tracking-tight" data-i18n="btn_survey">So'rovlar</h2>
-            <div id="surveyList" class="space-y-4"></div>
+            <div class="flex items-center justify-between px-2">
+                <button onclick="showView('homeView')"
+                    class="w-12 h-12 rounded-2xl elite-glass flex items-center justify-center active:scale-90 transition-all">
+                    <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                </button>
+                <div class="text-right">
+                    <h2 class="text-lg font-black tracking-tight uppercase" data-i18n="btn_survey">So'rovlar</h2>
+                    <p class="text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em]">Social Insight</p>
+                </div>
+            </div>
+            <div id="surveyList" class="space-y-4 pb-12"></div>
         </section>
 
         <!-- SUCCESS -->
@@ -408,190 +481,84 @@
             </button>
         </section>
 
-        <!-- ADMIN DASHBOARD -->
+        <!-- ADMIN DASHBOARD VIEW -->
         <section id="adminDashboardView" class="view space-y-8">
-            <div class="flex items-center justify-between">
-                <h2 class="text-3xl font-black tracking-tight" data-i18n="btn_admin">Admin</h2>
-                <div class="px-3 py-1 bg-primary/10 rounded-full text-[10px] font-black text-primary uppercase"
-                    data-i18n="label_moderator">
-                    Moderator</div>
+            <div class="flex items-center justify-between px-2">
+                <div class="space-y-1">
+                    <h2 class="text-xl font-black tracking-tight uppercase" data-i18n="btn_admin">Admin Panel</h2>
+                    <p class="text-[8px] font-bold text-primary uppercase tracking-[0.3em]">System Intelligence</p>
+                </div>
+                <button onclick="vibrate('medium'); showView('adminSettingsView')"
+                    class="w-12 h-12 rounded-2xl elite-glass flex items-center justify-center active:scale-90 transition-all text-slate-400">
+                    <i data-lucide="settings" class="w-6 h-6"></i>
+                </button>
             </div>
 
-            <!-- ULTIMATE PRO HEADER: Circular Gauges -->
-            <div class="grid grid-cols-4 gap-3">
-                <div
-                    class="card-pro p-3 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-primary/5 to-transparent border-primary/10">
-                    <div class="relative w-14 h-14">
-                        <canvas id="gaugeToday"></canvas>
-                        <div class="absolute inset-0 flex items-center justify-center text-[10px] font-black pointer-events-none"
-                            id="gaugeTodayVal">0%</div>
+            <!-- STATS GRID -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="card-pro elite-glass p-5 rounded-[32px] border-white/5 group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary transition-all">
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-[8px] font-black text-slate-600 uppercase tracking-widest">Live</span>
                     </div>
-                    <p class="text-[8px] font-black uppercase tracking-tighter text-slate-400" data-i18n="stats_today">
-                        Bugun</p>
+                    <p class="text-[9px] font-bold text-slate-500 uppercase tracking-tighter mb-1"
+                        data-i18n="label_total_users">Users</p>
+                    <p class="text-2xl font-black tracking-tight" id="valTotalUsers">0</p>
                 </div>
-                <div
-                    class="card-pro p-3 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-secondary/5 to-transparent border-secondary/10">
-                    <div class="relative w-14 h-14">
-                        <canvas id="gaugeWeek"></canvas>
-                        <div class="absolute inset-0 flex items-center justify-center text-[10px] font-black pointer-events-none"
-                            id="gaugeWeekVal">0%</div>
+
+                <div class="card-pro elite-glass p-5 rounded-[32px] border-white/5 group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary transition-all">
+                            <i data-lucide="message-circle" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-[8px] font-black text-slate-600 uppercase tracking-widest">New</span>
                     </div>
-                    <p class="text-[8px] font-black uppercase tracking-tighter text-slate-400" data-i18n="stats_week">
-                        Hafta</p>
-                </div>
-                <div
-                    class="card-pro p-3 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-accent/5 to-transparent border-accent/10">
-                    <div class="relative w-14 h-14">
-                        <canvas id="gaugeMonth"></canvas>
-                        <div class="absolute inset-0 flex items-center justify-center text-[10px] font-black pointer-events-none"
-                            id="gaugeMonthVal">0%</div>
-                    </div>
-                    <p class="text-[8px] font-black uppercase tracking-tighter text-slate-400" data-i18n="stats_month">
-                        Oy</p>
-                </div>
-                <div
-                    class="card-pro p-3 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-emerald-500/5 to-transparent border-emerald-500/10">
-                    <div class="relative w-14 h-14">
-                        <canvas id="gaugeTotal"></canvas>
-                        <div class="absolute inset-0 flex items-center justify-center text-[10px] font-black pointer-events-none"
-                            id="gaugeTotalVal">100%</div>
-                    </div>
-                    <p class="text-[8px] font-black uppercase tracking-tighter text-slate-400" data-i18n="label_total">
-                        Total</p>
+                    <p class="text-[9px] font-bold text-slate-500 uppercase tracking-tighter mb-1"
+                        data-i18n="label_total_appeals">Appeals</p>
+                    <p class="text-2xl font-black tracking-tight" id="valTotalAppeals">0</p>
                 </div>
             </div>
 
-            <!-- MAIN TREND: Area Chart -->
-            <div class="card-pro p-6 overflow-hidden relative group">
-                <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <i data-lucide="line-chart" class="w-20 h-20"></i>
+            <!-- ANALYTICS CARD -->
+            <div class="card-pro elite-glass p-8 rounded-[40px] border-white/5 relative overflow-hidden group">
+                <div class="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-[60px]"></div>
+                <div class="flex items-center justify-between mb-8 relative z-10">
+                    <h3 class="font-black text-sm uppercase tracking-tight" data-i18n="weekly_activity">Activity History
+                    </h3>
+                    <div
+                        class="px-3 py-1.5 rounded-lg bg-white/5 text-[8px] font-black uppercase tracking-widest text-slate-600">
+                        Last 7 Days</div>
                 </div>
-                <div class="flex items-center justify-between mb-8">
-                    <div class="space-y-1">
-                        <h3 class="text-xs font-black text-slate-500 uppercase tracking-[0.2em]"
-                            data-i18n="weekly_activity">Haftalik faollik</h3>
-                        <p class="text-2xl font-black tracking-tight"><span id="statsTotalDisplay">0</span> <span
-                                class="text-[10px] font-bold text-slate-400 uppercase ml-2"
-                                data-i18n="label_complaints">Murojaatlar</span></p>
-                    </div>
-                    <div class="flex gap-2">
-                        <div class="w-2 h-2 rounded-full bg-primary animate-ping"></div>
-                        <div class="w-2 h-2 rounded-full bg-primary"></div>
-                    </div>
-                </div>
-                <div class="h-64 w-full">
+                <div class="h-56 relative z-10">
                     <canvas id="weeklyChart"></canvas>
                 </div>
             </div>
 
-            <!-- DISTRIBUTION GRID -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Type Distribution -->
-                <div class="card-pro p-6 flex flex-col">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-xs font-black text-slate-500 uppercase tracking-[0.2em]"
-                            data-i18n="complaint_types_stats">Murojaat turlari</h3>
-                        <div class="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl">
-                            <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-500"></i>
-                        </div>
-                    </div>
-                    <div class="h-56 flex items-center justify-center">
-                        <canvas id="typeChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Direction Distribution -->
-                <div class="card-pro p-6 flex flex-col">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-xs font-black text-slate-500 uppercase tracking-[0.2em]"
-                            data-i18n="stats_by_direction_title">Yo'nalishlar tahlili</h3>
-                        <div class="p-2 bg-purple-50 dark:bg-purple-500/10 rounded-xl">
-                            <i data-lucide="bar-chart-horizontal" class="w-4 h-4 text-purple-500"></i>
-                        </div>
-                    </div>
-                    <div class="h-56 flex items-center justify-center">
-                        <canvas id="directionChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- COURSE ANALYSIS -->
-            <div class="card-pro p-6 relative overflow-hidden">
-                <div class="flex items-center justify-between mb-8">
-                    <div class="flex items-center gap-3">
-                        <div class="w-2 h-8 bg-gradient-to-b from-secondary to-accent rounded-full"></div>
-                        <div>
-                            <h3 class="text-xs font-black text-slate-500 uppercase tracking-[0.2em]"
-                                data-i18n="stats_by_course_title">Kurslar kesimida</h3>
-                        </div>
-                    </div>
-                    <div id="topDirectionBadge"
-                        class="px-4 py-2 bg-primary/10 rounded-2xl flex items-center gap-3 opacity-0 transition-all duration-700">
-                        <i data-lucide="zap" class="w-4 h-4 text-primary"></i>
-                        <p id="topDirectionBadgeName"
-                            class="text-[10px] font-black italic text-primary uppercase tracking-tight">--</p>
-                    </div>
-                </div>
-                <div class="h-72 w-full">
-                    <canvas id="courseChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Top Highlight -->
-            <div id="topDirectionCard"
-                class="card-pro bg-primary text-white p-6 flex items-center justify-between opacity-0 translate-y-4">
-                <div class="space-y-1">
-                    <p class="text-[10px] font-black uppercase tracking-widest opacity-80" data-i18n="most_active_dir">
-                        Eng faol yo'nalish</p>
-                    <p id="topDirectionName" class="text-xl font-black italic">--</p>
-                </div>
-                <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-                    <i data-lucide="trending-up" class="w-6 h-6"></i>
-                </div>
-            </div>
-
             <div class="space-y-4">
-                <h3 class="text-xs font-black text-slate-500 uppercase tracking-[0.2em] pl-2" data-i18n="btn_settings">
-                    Sozlamalar</h3>
-                <div class="grid grid-cols-1 gap-3">
+                <div class="flex items-center justify-between px-2">
+                    <h3 class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">Quick Actions</h3>
+                    <div class="h-px bg-white/5 flex-1 ml-4"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-3 pb-12">
                     <button onclick="vibrate('light'); showAdminSettings('admins')"
-                        class="card-pro flex items-center gap-5 p-5 group">
+                        class="elite-glass p-5 rounded-[24px] border-white/5 flex flex-col items-center gap-3 active:scale-95 transition-all group">
                         <div
-                            class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-all">
-                            <i data-lucide="users" class="w-6 h-6"></i>
+                            class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                            <i data-lucide="users" class="w-5 h-5"></i>
                         </div>
-                        <span class="font-extrabold text-slate-700 dark:text-slate-200"
-                            data-i18n="btn_manage_admins">Adminlar boshqaruvi</span>
+                        <span class="text-[9px] font-black uppercase tracking-tight text-center">Admins</span>
                     </button>
-
-                    <button onclick="vibrate('light'); showAdminSettings('faculties')"
-                        class="card-pro flex items-center gap-5 p-5 group">
-                        <div
-                            class="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-500 group-hover:scale-110 transition-all">
-                            <i data-lucide="university" class="w-6 h-6"></i>
-                        </div>
-                        <span class="font-extrabold text-slate-700 dark:text-slate-200"
-                            data-i18n="btn_manage_faculties">Fakultetlar</span>
-                    </button>
-
                     <button onclick="vibrate('light'); showAdminSettings('directions')"
-                        class="card-pro flex items-center gap-5 p-5 group">
+                        class="elite-glass p-5 rounded-[24px] border-white/5 flex flex-col items-center gap-3 active:scale-95 transition-all group">
                         <div
-                            class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-all">
-                            <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+                            class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500 group-hover:bg-purple-500 group-hover:text-white transition-all">
+                            <i data-lucide="graduation-cap" class="w-5 h-5"></i>
                         </div>
-                        <span class="font-extrabold text-slate-700 dark:text-slate-200"
-                            data-i18n="btn_manage_directions">Yo'nalishlar</span>
-                    </button>
-
-                    <button onclick="vibrate('light'); showAdminSettings('questions')"
-                        class="card-pro flex items-center gap-5 p-5 group">
-                        <div
-                            class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-all">
-                            <i data-lucide="help-circle" class="w-6 h-6"></i>
-                        </div>
-                        <span class="font-extrabold text-slate-700 dark:text-slate-200"
-                            data-i18n="btn_manage_questions">Savollar</span>
+                        <span class="text-[9px] font-black uppercase tracking-tight text-center">Directions</span>
                     </button>
                 </div>
             </div>
@@ -619,74 +586,65 @@
 
     </main>
 
-    <!-- Navigation Bar -->
-    <nav class="nav-floating">
-        <button onclick="vibrate('light'); showView('homeView')" id="navHome" class="nav-item-floating active">
-            <div class="active-dot"></div>
-            <i data-lucide="home" class="w-6 h-6"></i>
-            <span class="text-[10px] font-black uppercase tracking-widest mt-1" data-i18n="nav_home">Home</span>
+    <!-- ELITE NAVIGATION -->
+    <nav
+        class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 h-20 elite-glass rounded-[40px] px-4 flex items-center gap-3 shadow-2xl min-w-[320px] transition-all duration-500">
+        <button id="navhomeView" onclick="showView('homeView')" class="nav-elite-btn flex-1" data-v="homeView">
+            <i data-lucide="home"></i>
         </button>
-
-        <button onclick="vibrate('light'); showView('complaintView')" id="navComplaint" class="nav-item-floating">
-            <div class="active-dot"></div>
-            <i data-lucide="message-square" class="w-6 h-6"></i>
-            <span class="text-[10px] font-black uppercase tracking-widest mt-1"
-                data-i18n="nav_complaint">Murojaat</span>
+        <button id="navcomplaintView" onclick="showView('complaintView')" class="nav-elite-btn flex-1"
+            data-v="complaintView">
+            <i data-lucide="message-square"></i>
         </button>
-
-        <button onclick="vibrate('light'); showView('ratingView')" id="navRating" class="nav-item-floating">
-            <div class="active-dot"></div>
-            <i data-lucide="star" class="w-6 h-6"></i>
-            <span class="text-[10px] font-black uppercase tracking-widest mt-1" data-i18n="nav_rating">Baho</span>
+        <button id="navratingView" onclick="showView('ratingView')" class="nav-elite-btn flex-1" data-v="ratingView">
+            <i data-lucide="star"></i>
         </button>
-
-        <button onclick="vibrate('light'); showView('rulesView')" id="navRules" class="nav-item-floating">
-            <div class="active-dot"></div>
-            <i data-lucide="book-open" class="w-6 h-6"></i>
-            <span class="text-[10px] font-black uppercase tracking-widest mt-1" data-i18n="nav_rules">Qoidalar</span>
+        <button id="navrulesView" onclick="showView('rulesView')" class="nav-elite-btn flex-1" data-v="rulesView">
+            <i data-lucide="book-open"></i>
         </button>
-
-        <button onclick="vibrate('medium'); showView('adminDashboardView')" id="navAdmin"
-            class="nav-item-floating hidden">
-            <div class="active-dot"></div>
-            <i data-lucide="layout-dashboard" class="w-6 h-6"></i>
-            <span class="text-[10px] font-black uppercase tracking-widest mt-1" data-i18n="btn_admin">Admin</span>
+        <button id="navadminDashboardView" onclick="showView('adminDashboardView')" class="nav-elite-btn flex-1 hidden"
+            data-v="adminDashboardView">
+            <i data-lucide="shield"></i>
         </button>
     </nav>
 
-    <!-- Modal System -->
-    <div id="customModal" class="fixed inset-0 z-[100] hidden">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-md opacity-0 transition-opacity duration-300"
-            id="modalOverlay" onclick="closeModal()"></div>
-        <div class="absolute bottom-0 left-0 right-0 glass-morphism rounded-t-[48px] p-8 max-h-[90vh] overflow-y-auto translate-y-full transition-transform duration-500 shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.3)]"
-            id="modalContent">
-            <!-- Content -->
-        </div>
-    </div>
+    <style>
+        .nav-elite-btn {
+            height: 52px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.3);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
 
-    <!-- Ultimate Scripts -->
-    <script src="js/app.js?v=4.0.0-PRO"></script>
-    <script>
-        // Global Error Handler for Debugging
-        window.onerror = function (msg, url, lineNo, columnNo, error) {
-            console.error(msg, url, lineNo, columnNo, error);
-            if (window.Telegram?.WebApp) {
-                window.Telegram.WebApp.showAlert(`JS Error: ${msg}\nLine: ${lineNo}`);
-            }
-            return false;
-        };
+        .nav-elite-btn.active {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 10px 20px var(--primary-glow);
+            transform: scale(1.1) translateY(-4px);
+        }
 
-        // Fallback for skeleton if JS hangs
-        setTimeout(() => {
-            const s = document.getElementById('appSkeleton');
-            if (s && s.style.display !== 'none') {
-                console.warn('Skeleton forced hide');
-                s.style.opacity = '0';
-                s.style.pointerEvents = 'none';
-                setTimeout(() => s.style.display = 'none', 500);
+        .nav-elite-btn i {
+            width: 22px;
+            height: 22px;
+            stroke-width: 2.5px;
+        }
+
+        @keyframes loading {
+            0% {
+                transform: translateX(-100%);
             }
-        }, 5000);
-    </script>
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+    </style>
+
+    <script src="js/app.js?v=5.0.0-ELITE"></script>
 </body>
 
 </html>
