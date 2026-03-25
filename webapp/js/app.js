@@ -126,70 +126,76 @@ function applyTranslations() {
  * ULTIMATE ANIMATION ENGINE (GSAP)
  */
 function showView(viewId, animate = true) {
-    if (state.currentView === viewId && state.isLoaded) return;
+    const targetView = document.getElementById(viewId);
+    if (!targetView) return;
 
-    const oldView = document.getElementById(state.currentView);
-    const newView = document.getElementById(viewId);
-
-    if (!newView) return;
-
-    // Reset view visibility
-    document.querySelectorAll('.view').forEach(v => {
-        if (v.id !== viewId && v.id !== state.currentView) {
-            v.style.display = 'none';
-            v.style.opacity = '0';
-        }
-    });
-
-    if (animate && oldView) {
-        const tl = gsap.timeline();
-        tl.to(oldView, {
-            opacity: 0,
-            y: -30,
-            scale: 0.95,
-            duration: 0.4,
-            ease: "back.in(1.7)",
-            onComplete: () => {
-                oldView.style.display = 'none';
-                newView.style.display = 'block';
-
-                // Entrance with stagger
-                gsap.fromTo(newView,
-                    { opacity: 0, y: 40, scale: 1.05 },
-                    { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "expo.out" }
-                );
-
-                // Stagger children if any
-                const children = newView.querySelectorAll('.card-pro, .option-pro, .btn-pro, h3, .label-pro');
-                if (children.length) {
-                    gsap.fromTo(children,
-                        { opacity: 0, y: 20 },
-                        { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out", delay: 0.2 }
-                    );
-                }
-            }
-        });
-    } else {
-        if (oldView) oldView.style.display = 'none';
-        newView.style.display = 'block';
-        newView.style.opacity = '1';
+    // Close any open menus/overlays
+    const m = document.getElementById('langMenu');
+    const o = document.getElementById('langOverlay');
+    if (m && !m.classList.contains('hidden')) {
+        m.classList.add('hidden');
+        if (o) { o.style.display = 'none'; o.style.opacity = '0'; }
     }
 
+    if (state.currentView === viewId && state.isLoaded) return;
+
+    const currentView = document.querySelector('.view:not(.hidden)');
+
+    // Update State & Navbar
     state.currentView = viewId;
     state.isLoaded = true;
-
-    // Update Navbar
     updateNavbar(viewId);
 
-    // Auto-initializers
-    if (viewId === 'complaintView') initComplaintWizard();
-    if (viewId === 'ratingView') initRatingWizard();
-    if (viewId === 'rulesView') renderRulesList();
-    if (viewId === 'surveyView') renderSurveyList();
-    if (viewId === 'adminDashboardView') fetchAdminDashboard();
-
     window.scrollTo({ top: 0, behavior: animate ? 'smooth' : 'auto' });
-    if (window.lucide) window.lucide.createIcons();
+
+    if (!animate || !currentView) {
+        document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+        targetView.classList.remove('hidden');
+        targetView.style.opacity = '1';
+        targetView.style.transform = 'none';
+        if (window.lucide) window.lucide.createIcons();
+
+        // Auto-initializers for first load
+        if (viewId === 'complaintView') initComplaintWizard();
+        if (viewId === 'ratingView') initRatingWizard();
+        if (viewId === 'rulesView') renderRulesList();
+        if (viewId === 'surveyView') renderSurveyList();
+        if (viewId === 'adminDashboardView') fetchAdminDashboard();
+        return;
+    }
+
+    // GSAP Elegant Transition
+    gsap.to(currentView, {
+        opacity: 0,
+        y: -10,
+        duration: 0.3,
+        ease: "power2.inOut",
+        onComplete: () => {
+            currentView.classList.add('hidden');
+            targetView.classList.remove('hidden');
+            gsap.fromTo(targetView,
+                { opacity: 0, y: 20 },
+                { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }
+            );
+
+            // Stagger children for Elite feel
+            const children = targetView.querySelectorAll('.card-pro, .option-pro, .btn-pro, h3, .label-pro');
+            if (children.length) {
+                gsap.fromTo(children,
+                    { opacity: 0, y: 20 },
+                    { opacity: 1, y: 0, duration: 0.4, stagger: 0.08, ease: "power2.out", delay: 0.1 }
+                );
+            }
+            if (window.lucide) window.lucide.createIcons();
+
+            // Auto-initializers for Elite Flow
+            if (viewId === 'complaintView') initComplaintWizard();
+            if (viewId === 'ratingView') initRatingWizard();
+            if (viewId === 'rulesView') renderRulesList();
+            if (viewId === 'surveyView') renderSurveyList();
+            if (viewId === 'adminDashboardView') fetchAdminDashboard();
+        }
+    });
 }
 
 /**
@@ -1142,23 +1148,27 @@ window.closeModal = closeModal;
 window.showAdminSettings = showAdminSettings;
 window.toggleLangMenu = () => {
     const m = document.getElementById('langMenu');
+    const o = document.getElementById('langOverlay');
     if (m.classList.contains('hidden')) {
-        m.classList.remove('hidden');
-        gsap.fromTo(m, { opacity: 0, scale: 0.9, y: -10 }, { opacity: 1, scale: 1, y: 0, duration: 0.3 });
         renderLangOptions();
+        m.classList.remove('hidden');
+        if (o) { o.style.display = 'block'; gsap.to(o, { opacity: 1, duration: 0.3 }); }
+        gsap.fromTo(m, { opacity: 0, scale: 0.8, y: -20 }, { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: "back.out(1.7)" });
     } else {
-        gsap.to(m, { opacity: 0, scale: 0.9, y: -10, duration: 0.2, onComplete: () => m.classList.add('hidden') });
+        if (o) gsap.to(o, { opacity: 0, duration: 0.2, onComplete: () => o.style.display = 'none' });
+        gsap.to(m, { opacity: 0, scale: 0.8, y: -20, duration: 0.2, onComplete: () => m.classList.add('hidden') });
     }
 };
 
 function renderLangOptions() {
     const m = document.getElementById('langMenu');
     const langs = { uz: 'O\'zbekcha', ru: 'Русский', en: 'English' };
-    m.innerHTML = Object.entries(langs).map(([code, name]) => `
-        <button onclick="changeLang('${code}')" class="w-full text-left px-4 py-3 text-sm font-bold rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+    m.innerHTML = `<div class="p-2 space-y-1">` + Object.entries(langs).map(([code, name]) => `
+        <button onclick="changeLang('${code}')" class="w-full text-left px-4 py-3 text-sm font-bold rounded-2xl hover:bg-primary hover:text-white transition-all flex items-center justify-between group">
             ${name}
+            ${state.lang === code ? '<div class="w-1.5 h-1.5 rounded-full bg-primary group-hover:bg-white"></div>' : ''}
         </button>
-    `).join('');
+    `).join('') + `</div>`;
 }
 
 window.changeLang = async (code) => {
