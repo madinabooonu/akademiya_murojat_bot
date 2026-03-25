@@ -133,6 +133,25 @@ def get_complaint_types_from_db():
     return [{'code': k, 'translation_key': v} for k, v in get_complaint_types_dict().items()]
 
 
+def get_rating_questions_from_db():
+    """Baholash savollarini olish"""
+    from database_models import get_rating_questions
+    return [
+        {'question_number': q[0], 'translation_key': q[1], 'answer_type': q[2]}
+        for q in get_rating_questions()
+    ]
+
+
+def get_survey_links_from_db():
+    """So'rovnoma havolalarini olish"""
+    from database_models import get_all_survey_links
+    return [
+        {'code': s[0], 'url': s[1], 'translation_key': s[2]}
+        for s in get_all_survey_links()
+        if s[3]  # only active (is_active = 1)
+    ]
+
+
 # Redundant code removed
 
 
