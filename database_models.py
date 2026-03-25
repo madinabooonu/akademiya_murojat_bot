@@ -111,6 +111,12 @@ DEFAULT_SURVEY_LINKS = [
 # TABLE CREATION
 # ============================================
 
+def init_dynamic_config():
+    """Dinamik konfiguratsiya va monitoring jadvallarini yaratish"""
+    create_dynamic_tables()
+    seed_default_data()
+    seed_translations()
+
 def create_dynamic_tables():
     """Dinamik konfiguratsiya jadvallarini yaratish"""
     conn = sqlite3.connect(DATABASE_NAME)
@@ -238,15 +244,44 @@ def create_dynamic_tables():
         )
     ''')
 
-    # Bot settings table
+    # Monitoring: Users table
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS bot_settings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            key TEXT UNIQUE NOT NULL,
-            value TEXT NOT NULL
+        CREATE TABLE IF NOT EXISTS users (
+            telegram_id INTEGER PRIMARY KEY,
+            username TEXT,
+            first_name TEXT,
+            last_name TEXT,
+            language_code TEXT,
+            is_active INTEGER DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_seen DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ''')
 
+    # Monitoring: Error logs table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS error_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            level TEXT,
+            message TEXT,
+            traceback TEXT,
+            context TEXT
+        )
+    ''')
+    
+    # Monitoring: Activity logs table (New)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS activity_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            telegram_id INTEGER,
+            action TEXT NOT NULL,
+            source TEXT DEFAULT 'bot',
+            details TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
     conn.commit()
     conn.close()
     logger.info("Dinamik konfiguratsiya jadvallari yaratildi")
@@ -812,6 +847,46 @@ def update_survey_link(code, url):
     conn.commit()
     conn.close()
     trigger_cache_reload()
+
+
+def add_survey_link(code, url, translation_key=None):
+    """Yangi so'rovnoma qo'shish"""
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO survey_links (code, url, translation_key, is_active)
+            VALUES (?, ?, ?, 1)
+        ''', (code, url, translation_key))
+        conn.commit()
+        result = True
+    except sqlite3.IntegrityError:
+        result = False
+    conn.close()
+    if result: trigger_cache_reload()
+    return result
+
+
+def delete_survey_link(code):
+    """So'rovnomani o'chirish"""
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM survey_links WHERE code = ?', (code,))
+    affected = cursor.rowcount
+    conn.commit()
+    conn.close()
+    if affected > 0: trigger_cache_reload()
+    return affected > 0
+
+
+def get_all_survey_links():
+    """Barcha so'rovnomalarni ro'yxat ko'rinishida olish"""
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('SELECT code, url, translation_key, is_active FROM survey_links')
+    surveys = cursor.fetchall()
+    conn.close()
+    return surveys
 
 
 # ============================================

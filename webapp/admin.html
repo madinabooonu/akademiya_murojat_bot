@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akademiya | Monitoring Dashboard</title>
+    <!-- Modern Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/admin.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-bolt-lightning"></i>
+                <span>ACADEMY</span>
+            </div>
+            <nav>
+                <div class="nav-item active" data-tab="overview">
+                    <i class="fas fa-grid-2"></i>
+                    <span>Umumiy</span>
+                </div>
+                <div class="nav-item" data-tab="charts">
+                    <i class="fas fa-chart-line-up"></i>
+                    <span>Analitika</span>
+                </div>
+                <div class="nav-item" data-tab="activity">
+                    <i class="fas fa-bolt"></i>
+                    <span>Harakatlar</span>
+                </div>
+                <div class="nav-item" data-tab="errors">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <span>Xatolar</span>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <header>
+                <div>
+                    <h1>Insights Dashboard</h1>
+                    <p style="color: var(--text-muted); margin-top: 8px;">Real-time monitoring & analytics</p>
+                </div>
+                <div class="user-info">
+                    <span id="update-time"><i class="fas fa-clock-rotate-left"></i> --:--:--</span>
+                    <button id="refresh-btn"><i class="fas fa-rotate"></i></button>
+                </div>
+            </header>
+
+            <!-- Overview Section -->
+            <section id="overview" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon users"><i class="fas fa-user-group"></i></div>
+                        <div class="stat-info">
+                            <h3>Barcha foydalanuvchilar</h3>
+                            <p id="total-users" class="counter">0</p>
+                            <span id="new-users" class="trend"><i class="fas fa-arrow-trend-up"></i> +0 bugun</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon messages"><i class="fas fa-comments"></i></div>
+                        <div class="stat-info">
+                            <h3>Murojaatlar</h3>
+                            <p id="total-complaints" class="counter">0</p>
+                            <span id="complaints-today" class="trend"><i class="fas fa-paper-plane"></i> 0 bugun</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon health"><i class="fas fa-heart-pulse"></i></div>
+                        <div class="stat-info">
+                            <h3>Faollik (DAU)</h3>
+                            <p id="dau-count" class="counter">0</p>
+                            <span id="error-status" class="trend danger">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-container main-chart">
+                        <h3><i class="fas fa-wave-square" style="color: var(--primary);"></i> Faollik dinamikasi (14
+                            kun)</h3>
+                        <canvas id="mainTrendChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3><i class="fas fa-chart-pie" style="color: var(--accent);"></i> Manbalar</h3>
+                        <canvas id="sourceChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3><i class="fas fa-list-check" style="color: var(--secondary);"></i> Yo'nalishlar</h3>
+                        <canvas id="facultyChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Activity Section -->
+            <section id="activity" class="tab-content">
+                <div class="table-container">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h3><i class="fas fa-bolt" style="color: var(--warning);"></i> Live Activity Feed</h3>
+                        <span class="badge badge-bot">Live Stream</span>
+                    </div>
+                    <table id="activityTable">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User ID</th>
+                                <th>Action</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Errors Section -->
+            <section id="errors" class="tab-content">
+                <div class="table-container">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h3><i class="fas fa-bug" style="color: var(--danger);"></i> System Error Logs</h3>
+                        <div
+                            style="background: rgba(244, 63, 94, 0.1); padding: 5px 15px; border-radius: 12px; border: 1px solid var(--danger);">
+                            <span id="total-errors-badge" style="color: var(--danger); font-weight: 700;">0 Xato
+                                topildi</span>
+                        </div>
+                    </div>
+                    <table id="errorTable">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Level</th>
+                                <th>Message</th>
+                                <th>Context</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Details Modal -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle" style="margin-bottom: 1.5rem; font-size: 1.5rem;">Log Detail</h2>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+
+</html>

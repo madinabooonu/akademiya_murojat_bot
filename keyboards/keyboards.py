@@ -1,7 +1,7 @@
 # keyboards.py
 # ReplyKeyboard klaviaturalari - DINAMIK (bazadan o'qiydi)
 
-from telegram import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
+from telegram import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
 import utils.utils as utils
 
 
@@ -43,6 +43,31 @@ def get_main_menu_keyboard(context, webapp_url=None):
 
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
+
+def get_webapp_inline_keyboard(context, webapp_url=None):
+    """Mini App ni darhol ochuvchi chiroyli Inline tugma"""
+    from config.config import WEBAPP_URL as DEFAULT_URL
+    url = webapp_url or DEFAULT_URL
+    
+    # URLga user_id qo'shish
+    user_id = context.user_data.get('user_id') or context.user_data.get('telegram_id', '')
+    if user_id:
+        joiner = "&" if "?" in url else "?"
+        url = f"{url}{joiner}user_id={user_id}"
+        
+    # Tilga mos tugma matni (default: O'zbek)
+    lang = context.user_data.get('language', 'uz')
+    if lang == 'ru':
+        btn_text = "🚀 Открыть приложение (Mini App)"
+    elif lang == 'en':
+        btn_text = "🚀 Open Application (Mini App)"
+    else:
+        btn_text = "🚀 Dasturni ochish (Mini App)"
+        
+    keyboard = [
+        [InlineKeyboardButton(btn_text, web_app=WebAppInfo(url=url))]
+    ]
+    return InlineKeyboardMarkup(keyboard)
 
 def get_directions_keyboard(context):
     """Yo'nalishlar klaviaturasi (BAZADAN, 2 tugma bir qator)"""
@@ -194,20 +219,29 @@ def get_survey_links_keyboard(context):
 
 
 def get_admin_keyboard(context):
+    from config.config import WEBAPP_URL
+    
     buttons = [
         utils.get_text('btn_stats', context),
         utils.get_text('btn_view_complaints', context),
-        utils.get_text('btn_export_menu', context),
-        utils.get_text('btn_dashboard', context),
-        utils.get_text('btn_settings', context),
-        utils.get_text('btn_back_main', context)
+        utils.get_text('btn_export_menu', context)
     ]
+    
     keyboard = []
-    for i in range(0, len(buttons), 2):
-        row = [KeyboardButton(buttons[i])]
-        if i + 1 < len(buttons):
-            row.append(KeyboardButton(buttons[i + 1]))
-        keyboard.append(row)
+    # Statistics and View Complaints row
+    keyboard.append([KeyboardButton(buttons[0]), KeyboardButton(buttons[1])])
+    # Export and Settings row
+    keyboard.append([KeyboardButton(buttons[2]), KeyboardButton(utils.get_text('btn_settings', context))])
+    
+    # Dashboard as WebApp
+    if WEBAPP_URL:
+        dashboard_url = f"{WEBAPP_URL}/admin.html?user_id={context.user_data.get('user_id', context.user_data.get('telegram_id', ''))}"
+        keyboard.append([KeyboardButton(utils.get_text('btn_dashboard_webapp', context), web_app=WebAppInfo(url=dashboard_url))])
+    else:
+        keyboard.append([KeyboardButton(utils.get_text('btn_dashboard', context))])
+        
+    keyboard.append([KeyboardButton(utils.get_text('btn_back_main', context))])
+    
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
 
@@ -258,6 +292,7 @@ def get_settings_keyboard(context):
         utils.get_text('btn_manage_faculties', context),
         utils.get_text('btn_manage_directions', context),
         utils.get_text('btn_manage_questions', context),
+        utils.get_text('btn_manage_surveys', context),
         utils.get_text('btn_manage_languages', context),
         utils.get_text('btn_back', context)
     ]

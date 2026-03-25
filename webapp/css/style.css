@@ -86,3 +86,6 @@
 [data-lucide] {
     display: inline-block;
 }
+
+/* Dark Mode Overrides for Inputs/Textareas */
+/* Moved to index.html for better specificity */

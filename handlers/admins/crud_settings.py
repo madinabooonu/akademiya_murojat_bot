@@ -13,6 +13,7 @@ from database_models import (
     get_all_faculties, add_faculty, delete_faculty,
     get_directions_by_faculty, add_direction, delete_direction,
     get_rating_questions, add_rating_question, update_rating_question, delete_rating_question,
+    get_all_survey_links, add_survey_link, delete_survey_link,
     update_translation
 )
 
@@ -556,3 +557,129 @@ async def handle_delete_question(update: Update, context: ContextTypes.DEFAULT_T
         await update.message.reply_text(utils.get_text('invalid_input', context))
     
     await show_questions_menu(update, context)
+
+
+# ============================================
+# SURVEY MANAGEMENT (NEW)
+# ============================================
+
+async def show_surveys_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """So'rovnomalarni boshqarish menyusi"""
+    if not utils.is_admin(update.effective_user.id):
+        return
+    
+    context.user_data['state'] = 'surveys_menu'
+    context.user_data['crud_type'] = 'surveys'
+    
+    await update.message.reply_text(
+        utils.get_text('btn_manage_surveys', context),
+        reply_markup=get_crud_keyboard(context)
+    )
+
+
+async def list_surveys(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """So'rovnomalar ro'yxatini ko'rsatish"""
+    if not utils.is_admin(update.effective_user.id):
+        return
+    
+    surveys = get_all_survey_links()
+    
+    if not surveys:
+        await update.message.reply_text(utils.get_text('surveys_empty', context))
+        return
+    
+    import html
+    text = html.escape(utils.get_text('surveys_list_title', context))
+    for code, url, translation_key, is_active in surveys:
+        status = "✅" if is_active else "❌"
+        # translation_key bo'lsa uni ishlatamiz, bo'lmasa codeni o'zini
+        name = html.escape(utils.get_text(translation_key, context) if translation_key else code)
+        text += f"{status} <code>{html.escape(code)}</code>\n📝 {name}\n🔗 {html.escape(url)}\n\n"
+    
+    await update.message.reply_text(text, parse_mode='HTML', disable_web_page_preview=True)
+
+
+async def prompt_add_survey(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """So'rovnoma qo'shish uchun so'rash"""
+    if not utils.is_admin(update.effective_user.id):
+        return
+    
+    context.user_data['state'] = 'adding_survey_title'
+    
+    await update.message.reply_text(
+        utils.get_text('survey_add_prompt', context),
+        reply_markup=get_back_keyboard(context)
+    )
+
+
+async def handle_add_survey_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """So'rovnoma nomi kiritilganda"""
+    text = update.message.text
+    
+    if text == utils.get_text('btn_back', context):
+        return await show_surveys_menu(update, context)
+    
+    context.user_data['new_survey_title'] = text
+    context.user_data['state'] = 'adding_survey_url'
+    
+    await update.message.reply_text(
+        utils.get_text('survey_add_url_prompt', context),
+        reply_markup=get_back_keyboard(context)
+    )
+
+
+async def handle_add_survey_url(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """So'rovnoma URL'i kiritilganda"""
+    url = update.message.text
+    
+    if url == utils.get_text('btn_back', context):
+        return await prompt_add_survey(update, context)
+    
+    title = context.user_data.get('new_survey_title')
+    # Kodni nomidan yasab olamiz (faqat ingliz harflari va sonlar)
+    import re
+    code = re.sub(r'[^a-zA-Z0-9]', '_', title).lower()[:20]
+    translation_key = f'survey_{code}_title'
+    
+    # Tarjimani qo'shamiz (barcha tillar uchun hozircha bir xil nom)
+    lang_code = context.user_data.get('language', 'uz')
+    update_translation(translation_key, lang_code, title)
+    
+    # So'rovnomani bazaga qo'shamiz
+    if add_survey_link(code, url, translation_key):
+        await update.message.reply_text(utils.get_text('survey_added', context))
+    else:
+        await update.message.reply_text(utils.get_text('survey_exists', context))
+    
+    context.user_data.pop('new_survey_title', None)
+    await show_surveys_menu(update, context)
+
+
+async def prompt_delete_survey(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """So'rovnomani o'chirish uchun so'rash"""
+    if not utils.is_admin(update.effective_user.id):
+        return
+    
+    context.user_data['state'] = 'deleting_survey'
+    
+    await list_surveys(update, context)
+    
+    await update.message.reply_text(
+        utils.get_text('survey_delete_prompt', context),
+        reply_markup=get_back_keyboard(context)
+    )
+
+
+async def handle_delete_survey(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """So'rovnomani o'chirish"""
+    text = update.message.text
+    
+    if text == utils.get_text('btn_back', context):
+        return await show_surveys_menu(update, context)
+    
+    if delete_survey_link(text.lower()):
+        await update.message.reply_text(utils.get_text('survey_deleted', context))
+    else:
+        await update.message.reply_text(utils.get_text('survey_not_found', context))
+    
+    await show_surveys_menu(update, context)

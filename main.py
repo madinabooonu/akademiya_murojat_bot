@@ -8,10 +8,11 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 # Import qilish
 # Import qilish
 from config.config import BOT_TOKEN, LANGS, WEBAPP_URL
-from database import init_database
+from database import init_database, upsert_user, log_error
 from database_models import init_dynamic_config
 from keyboards.keyboards import (
     get_main_menu_keyboard,
+    get_webapp_inline_keyboard,
     get_language_keyboard,
     get_faculties_keyboard,
     get_dynamic_keyboard,
@@ -78,7 +79,9 @@ from handlers.admins.crud_settings import (
     show_directions_menu, list_directions, prompt_add_direction, handle_add_direction_code,
     handle_add_direction_faculty, handle_add_direction_name, prompt_delete_direction, handle_delete_direction,
     show_questions_menu, list_questions, prompt_add_question, handle_add_question_text, handle_add_question_type,
-    prompt_delete_question, handle_delete_question
+    prompt_delete_question, handle_delete_question,
+    show_surveys_menu, list_surveys, prompt_add_survey, handle_add_survey_title, handle_add_survey_url,
+    prompt_delete_survey, handle_delete_survey
 )
 
 # Logging sozlash
@@ -88,9 +91,29 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Error loglarini bazaga yozish uchun maxsus Handler
+class DatabaseLogHandler(logging.Handler):
+    def emit(self, record):
+        try:
+            if record.levelno >= logging.ERROR:
+                log_error(
+                    level=record.levelname,
+                    message=record.getMessage(),
+                    traceback_str=record.exc_text or (logging.Formatter().formatException(record.exc_info) if record.exc_info else None),
+                    context={"module": record.module, "funcName": record.funcName, "lineno": record.lineno}
+                )
+        except:
+            pass
+
+# Handlerni qo'shish
+logging.getLogger().addHandler(DatabaseLogHandler())
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Bot ishga tushganda"""
+    # Foydalanuvchini bazaga yozish/yangilash
+    upsert_user(update.effective_user.to_dict())
+
     # Agar til tanlanmagan bo'lsa, til tanlashga yuboramiz
     if 'language' not in context.user_data:
         await update.message.reply_text(
@@ -99,12 +122,47 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    # context.user_data.clear() # Buni o'chiramiz, chunki tilni o'chirib yuboradi
+    lang = context.user_data.get('language', 'uz')
+    
+    # Agar URL kiritilmagan bo'lsa, vaqtinchalik xavfsiz URL qo'yish
+    safe_webapp_url = WEBAPP_URL if WEBAPP_URL else "https://google.com"
 
-    welcome_text = utils.get_text('welcome', context)
+    if lang == 'ru':
+        welcome_text = (
+            "👋 <b>Добро пожаловать в Академию!</b>\n\n"
+            "📌 Наш проект полностью перешел на цифровой этап! 🚀\n"
+            "Все обращения, предложения, оценки уроков и правила экзаменов теперь "
+            "принимаются через единую и современную мини-платформу.\n\n"
+            "<i>👇 Откройте систему, нажав на кнопку ниже:</i>"
+        )
+        menu_text = "Или воспользуйтесь бот-меню 👇"
+    elif lang == 'en':
+        welcome_text = (
+            "👋 <b>Welcome to the Academy!</b>\n\n"
+            "📌 Our project has fully transitioned to the digital stage! 🚀\n"
+            "All appeals, suggestions, lesson ratings, and exam rules are now "
+            "handled through a single, modern mini-platform.\n\n"
+            "<i>👇 Open the system by clicking the button below:</i>"
+        )
+        menu_text = "Or use the bot menu 👇"
+    else:
+        welcome_text = (
+            "👋 <b>Akademiyamizga Xush Kelibsiz!</b>\n\n"
+            "📌 Loyihamiz to'liq raqamli bosqichga o'tdi! 🚀\n"
+            "Barcha murojaatlar, takliflar, darslarni baholash va imtihon qoidalari endi "
+            "yagona va zamonaviy mini-ilova orqali amalga oshiriladi.\n\n"
+            "<i>👇 Pastdagi tugmani bosib, tizimga kiring:</i>"
+        )
+        menu_text = "Yoki bot menyusidan foydalaning 👇"
 
     await update.message.reply_text(
         welcome_text,
+        parse_mode='HTML',
+        reply_markup=get_webapp_inline_keyboard(context, webapp_url=safe_webapp_url)
+    )
+    
+    await update.message.reply_text(
+        menu_text,
         reply_markup=get_main_menu_keyboard(context, webapp_url=WEBAPP_URL)
     )
 
@@ -123,6 +181,8 @@ async def handle_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Hozircha hardcode qilingan stringlarni utils.get_text bilan almashtiramiz.
     
     if text == utils.get_text('btn_complaint', context):
+        from database import record_activity
+        record_activity(update.effective_user.id, 'nav_complaint', 'bot')
         await start_complaint(update, context)
 
     elif text == utils.get_text('btn_rules', context):
@@ -161,6 +221,8 @@ async def handle_select_language(update: Update, context: ContextTypes.DEFAULT_T
             
     if selected_lang_code:
         context.user_data['language'] = selected_lang_code
+        from database import record_activity
+        record_activity(update.effective_user.id, f'select_lang_{selected_lang_code}', 'bot')
         # Tanlangandan keyin holatni tozalaymiz va asosiy menyuga o'tamiz
         context.user_data['state'] = ''
         await start(update, context)
@@ -220,12 +282,6 @@ async def handle_complaint_flow(update: Update, context: ContextTypes.DEFAULT_TY
                     reply_markup=get_education_lang_keyboard(context)
                 )
 
-        elif state == 'choosing_course':
-            context.user_data['state'] = 'choosing_course'
-            await update.message.reply_text(
-                utils.get_text('choose_course', context),
-                reply_markup=get_courses_keyboard(context)
-            )
 
         elif state == 'choosing_complaint_type':
             context.user_data['state'] = 'choosing_course'
@@ -288,7 +344,7 @@ async def handle_complaint_flow(update: Update, context: ContextTypes.DEFAULT_TY
         await handle_education_lang_choice(update, context)
         return
 
-    # 3️⃣ Kurs tanlash
+                   # 3️⃣ Kurs tanlash
     elif state == 'choosing_course':
         await handle_course_choice(update, context)
         return
@@ -424,6 +480,8 @@ async def handle_settings_menu_flow(update: Update, context: ContextTypes.DEFAUL
         await show_directions_menu(update, context)
     elif text == utils.get_text('btn_manage_questions', context):
         await show_questions_menu(update, context)
+    elif text == utils.get_text('btn_manage_surveys', context):
+        await show_surveys_menu(update, context)
     elif text == utils.get_text('btn_back', context):
         await show_admin_panel(update, context)
 
@@ -495,10 +553,30 @@ async def handle_questions_crud_flow(update: Update, context: ContextTypes.DEFAU
     elif text == utils.get_text('btn_back', context):
         await show_settings_menu(update, context)
 
+
+async def handle_surveys_crud_flow(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """So'rovnomalar CRUD oqimi"""
+    if not utils.is_admin(update.effective_user.id):
+        return
+    
+    text = update.message.text
+    
+    if text == utils.get_text('btn_add', context):
+        await prompt_add_survey(update, context)
+    elif text == utils.get_text('btn_list', context):
+        await list_surveys(update, context)
+    elif text == utils.get_text('btn_delete', context):
+        await prompt_delete_survey(update, context)
+    elif text == utils.get_text('btn_back', context):
+        await show_settings_menu(update, context)
+
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Barcha matnli xabarlarni boshqarish"""
     text = update.message.text
     state = context.user_data.get('state', '')
+
+    # Foydalanuvchini bazaga yozish/yangilash
+    upsert_user(update.effective_user.to_dict())
 
     # 1. Global: Til tanlash (Har qanday holatda ishlaydi)
     if text in LANGS.values():
@@ -613,6 +691,20 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if state == 'deleting_question':
         await handle_delete_question(update, context)
         return
+    
+    # Survey CRUD
+    if state == 'surveys_menu':
+        await handle_surveys_crud_flow(update, context)
+        return
+    if state == 'adding_survey_title':
+        await handle_add_survey_title(update, context)
+        return
+    if state == 'adding_survey_url':
+        await handle_add_survey_url(update, context)
+        return
+    if state == 'deleting_survey':
+        await handle_delete_survey(update, context)
+        return
 
     # Kunlik darsni baholash jarayoni
     if state == 'rating_direction':
@@ -681,7 +773,7 @@ def main():
         port = int(os.environ.get('PORT', 8085))
         
         # Web serverni ishga tushirish
-        runner = await start_web_server(host='0.0.0.0', port=port)
+        runner = await start_web_server(bot=application.bot, host='0.0.0.0', port=port)
         logger.info(f"Mini App web server {port} portda ishga tushdi")
         
         # Botni ishga tushirish

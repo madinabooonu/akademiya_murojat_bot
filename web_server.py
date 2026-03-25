@@ -13,6 +13,8 @@ from database import save_complaint, save_lesson_rating
 
 logger = logging.getLogger(__name__)
 
+SHARED_BOT = None
+
 # ============================================
 # MIDDLEWARE
 # ============================================
@@ -200,6 +202,8 @@ async def api_submit_rating(request):
         data = await request.json()
         data['source'] = 'webapp'
         uid = save_lesson_rating(data)
+        from database import record_activity
+        record_activity(data.get('telegram_id'), 'submit_rating', 'webapp', {'uid': uid})
         return web.json_response({'success': True, 'uid': uid})
     except Exception as e:
         logger.error(f"Error submitting rating: {e}")
@@ -238,6 +242,8 @@ async def api_submit_complaint(request):
                 )
         
         uid = save_complaint(data)
+        from database import record_activity
+        record_activity(data.get('telegram_id'), 'submit_complaint', 'webapp', {'uid': uid})
         
         return web.json_response({
             'success': True, 
@@ -293,17 +299,48 @@ async def api_admin_stats(request):
     return web.json_response(stats)
 
 async def api_admin_dashboard(request):
-    from database import get_statistics
-    stats = get_statistics()
-    # Mocking dashboard fields if they don't exist in get_statistics
-    # Based on handlers/admins/admin.py show_dashboard
-    dashboard_data = {
-        'today': stats.get('today', 0),
-        'week': stats.get('week', 0),
-        'month': stats.get('month', 0),
-        'top_direction': stats.get('top_direction', (None, 0))
-    }
-    return web.json_response(dashboard_data)
+    from database import get_admin_dashboard_data
+    stats = get_admin_dashboard_data()
+    return web.json_response(stats)
+
+async def api_admin_logs(request):
+    """Xatolarni olish"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM error_logs ORDER BY timestamp DESC LIMIT 50')
+    logs = [
+        {
+            'id': row[0],
+            'timestamp': row[1],
+            'level': row[2],
+            'message': row[3],
+            'traceback': row[4],
+            'context': json.loads(row[5]) if row[5] else None
+        } for row in cursor.fetchall()
+    ]
+    conn.close()
+    return web.json_response({'logs': logs})
+
+async def api_admin_activity(request):
+    """Oxirgi harakatlarni olish"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT telegram_id, action, source, timestamp 
+        FROM activity_logs 
+        ORDER BY timestamp DESC 
+        LIMIT 20
+    ''')
+    activity = [
+        {
+            'user_id': r[0],
+            'action': r[1],
+            'source': r[2],
+            'time': r[3]
+        } for r in cursor.fetchall()
+    ]
+    conn.close()
+    return web.json_response({'activity': activity})
 
 async def api_admin_settings_list(request):
     setting_type = request.match_info.get('type')
@@ -359,6 +396,55 @@ async def api_admin_translations_list(request):
         # Fallback if not implemented
         return web.json_response({'error': 'Not implemented'}, status=501)
 
+import asyncio
+
+async def broadcast_task(bot, users, message_text):
+    """Foydalanuvchilarga xabar jo'natish (Rate Limit bilan)"""
+    success = 0
+    failed = 0
+    
+    for user_id in users:
+        try:
+            await bot.send_message(chat_id=user_id, text=message_text, parse_mode='HTML')
+            success += 1
+        except Exception as e:
+            logger.error(f"Failed to send broadcast to {user_id}: {e}")
+            failed += 1
+            
+        # Rate limit: ~30 msg/s for non-group messages -> 0.05s delay logic
+        await asyncio.sleep(0.05)
+        
+    logger.info(f"Broadcast completed. Success: {success}, Failed: {failed}")
+
+async def api_admin_broadcast(request):
+    """Barcha foydalanuvchilarga xabar jo'natish endpoint'i"""
+    if not SHARED_BOT:
+        return web.json_response({'error': 'Bot instance not available'}, status=500)
+        
+    try:
+        data = await request.json()
+        message_text = data.get('message')
+        
+        if not message_text:
+            return web.json_response({'error': 'Message is required'}, status=400)
+            
+        from database import get_all_users
+        users = get_all_users()
+        
+        if not users:
+            return web.json_response({'error': 'No users found'}, status=404)
+            
+        # Run broadcast in background
+        asyncio.create_task(broadcast_task(SHARED_BOT, users, message_text))
+        
+        return web.json_response({
+            'success': True,
+            'message': f"Xabar {len(users)} ta foydalanuvchiga jo'natish boshlandi."
+        })
+    except Exception as e:
+        logger.error(f"Error in broadcast API: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
 
 async def index_handler(request):
     """Asosiy index.html ni yuborish"""
@@ -379,6 +465,24 @@ async def index_handler(request):
         
     logger.error(debug_msg)
     return web.Response(text=debug_msg, status=404)
+
+
+async def admin_premium_handler(request):
+    """Premium Admin Dashboard handler"""
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(base_dir, 'webapp', 'admin_premium.html')
+    if os.path.exists(path):
+        return web.FileResponse(path)
+    return web.Response(text="admin_premium.html not found", status=404)
+
+
+async def admin_stats_page_handler(request):
+    """Elite Admin Statistics Dashboard handler"""
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(base_dir, 'webapp', 'admin_stats.html')
+    if os.path.exists(path):
+        return web.FileResponse(path)
+    return web.Response(text="admin_stats.html not found", status=404)
 
 
 # ============================================
@@ -409,12 +513,17 @@ def create_webapp_server():
     # Admin API routes (PROTECTED)
     app.router.add_get('/api/admin/stats', admin_required(api_admin_stats))
     app.router.add_get('/api/admin/dashboard', admin_required(api_admin_dashboard))
+    app.router.add_get('/api/admin/logs', admin_required(api_admin_logs))
+    app.router.add_get('/api/admin/activity', admin_required(api_admin_activity))
     app.router.add_get('/api/admin/settings/{type}', admin_required(api_admin_settings_list))
     app.router.add_delete('/api/admin/settings/{type}/{id}', admin_required(api_admin_delete_setting))
     app.router.add_get('/api/admin/translations', admin_required(api_admin_translations_list))
+    app.router.add_post('/api/admin/broadcast', admin_required(api_admin_broadcast))
     
     # Root route for index.html
     app.router.add_get('/', index_handler)
+    app.router.add_get('/admin/premium', admin_premium_handler)
+    app.router.add_get('/admin/stats', admin_stats_page_handler)
 
     # Static files (CSS, JS, assets)
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -440,8 +549,11 @@ def create_webapp_server():
     return app
 
 
-async def start_web_server(host='0.0.0.0', port=8080):
+async def start_web_server(bot=None, host='0.0.0.0', port=8080):
     """Web serverni ishga tushirish"""
+    global SHARED_BOT
+    SHARED_BOT = bot
+    
     # Debug paths at startup
     base_dir = os.path.dirname(os.path.abspath(__file__))
     logger.info(f"Starting server. Base DIR: {base_dir}")

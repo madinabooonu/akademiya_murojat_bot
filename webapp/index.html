@@ -28,26 +28,37 @@
                         primary: {
                             DEFAULT: '#6366f1',
                             dark: '#4f46e5',
-                            light: '#818cf8'
+                            light: '#818cf8',
+                            neon: '#00f2ff'
                         },
-                        secondary: '#a855f7',
+                        secondary: {
+                            DEFAULT: '#a855f7',
+                            neon: '#c084fc'
+                        },
                         accent: '#ec4899',
                         dark: {
-                            bg: '#0a0f1d',
-                            card: '#161e31',
-                            border: '#2d3748'
+                            bg: '#020617',
+                            surface: '#0f172a',
+                            card: 'rgba(15, 23, 42, 0.4)',
+                            border: 'rgba(255, 255, 255, 0.05)'
                         }
+                    },
+                    backgroundImage: {
+                        'tech-mesh': "radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%)"
                     },
                     fontFamily: {
                         sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
                     },
                     borderRadius: {
                         '3xl': '24px',
                         '4xl': '32px',
+                        '5xl': '40px',
                     },
                     animation: {
                         'shimmer': 'shimmer 2s infinite linear',
                         'float': 'float 3s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     },
                     keyframes: {
                         shimmer: {
@@ -73,44 +84,53 @@
         }
         @layer components {
             .glass-morphism { 
-                @apply bg-white/80 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-white/5; 
+                @apply bg-white/70 dark:bg-dark-surface/30 backdrop-blur-3xl border border-white/20 dark:border-white/5; 
+                box-shadow: inset 0 0 40px 0 rgba(255, 255, 255, 0.02), 0 4px 30px rgba(0, 0, 0, 0.4);
             }
             .btn-pro { 
-                @apply relative overflow-hidden font-bold py-4 px-8 rounded-3xl transition-all active:scale-[0.97] flex items-center justify-center gap-3 disabled:opacity-50 shadow-lg shadow-primary/20; 
-                background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+                @apply relative overflow-hidden font-black py-4.5 px-8 rounded-5xl transition-all active:scale-[0.95] flex items-center justify-center gap-3 disabled:opacity-50 shadow-2xl; 
+                background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+                background-size: 200% auto;
                 color: white;
             }
             .btn-pro:hover {
-                @apply shadow-xl shadow-primary/40 -translate-y-0.5;
+                @apply -translate-y-1 shadow-primary/40;
+                background-position: right center;
             }
             .card-pro { 
-                @apply bg-white dark:bg-dark-card border border-slate-100 dark:border-white/5 rounded-4xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300; 
+                @apply bg-white dark:bg-dark-card border border-slate-100 dark:border-white/5 rounded-[48px] p-8 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]; 
+                backdrop-filter: blur(24px);
+                box-shadow: inset 0 0 20px 0 rgba(255, 255, 255, 0.02);
             }
             .input-pro { 
-                @apply w-full bg-slate-50 dark:bg-slate-900/40 border-2 border-transparent focus:border-primary focus:bg-white dark:focus:bg-slate-800/60 rounded-3xl py-4 px-7 focus:ring-4 focus:ring-primary/10 outline-none transition-all text-lg font-bold text-slate-800 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-600; 
-                box-shadow: 0 4px 6px -1px rgba(0,0,0,0.01), 0 2px 4px -1px rgba(0,0,0,0.01);
+                @apply w-full bg-slate-50 dark:bg-dark-surface/50 border-2 border-transparent focus:border-primary/40 focus:bg-white dark:focus:bg-dark-surface/80 rounded-[32px] py-5 px-8 focus:ring-8 focus:ring-primary/5 outline-none transition-all text-lg font-bold text-slate-800 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-600; 
+                box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
             }
             .label-pro {
-                @apply flex items-center gap-2.5 text-[10px] font-black text-indigo-500/80 dark:text-indigo-400 uppercase tracking-[0.2em] mb-4 ml-2;
-            }
-            .label-pro i {
-                @apply text-primary-light;
-            }
-            .label-pro::after {
-                content: '';
-                @apply h-px flex-1 bg-gradient-to-r from-indigo-100 to-transparent dark:from-white/5;
+                @apply flex items-center gap-3 text-[11px] font-black text-indigo-500/80 dark:text-indigo-400/60 uppercase tracking-[0.3em] mb-4 ml-4 font-display;
             }
             .option-pro { 
-                @apply bg-white dark:bg-slate-800/40 border-[1.5px] border-slate-100 dark:border-white/5 hover:border-primary/50 p-5 rounded-3xl transition-all cursor-pointer flex items-center gap-5 active:scale-[0.98] group; 
+                @apply bg-white dark:bg-dark-surface/40 border-[1.5px] border-slate-100 dark:border-white/5 hover:border-primary/40 p-6 rounded-[32px] transition-all cursor-pointer flex items-center gap-6 active:scale-[0.98] group relative overflow-hidden; 
             }
             .option-pro.selected { 
-                @apply border-primary bg-primary/5 dark:bg-primary/10 ring-4 ring-primary/5 shadow-inner; 
+                @apply border-primary bg-primary/5 dark:bg-primary/20 ring-8 ring-primary/5; 
             }
-            .skeleton {
-                @apply bg-slate-200 dark:bg-slate-800 relative overflow-hidden;
-                background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-                background-size: 200% 100%;
-                animation: shimmer 1.5s infinite;
+            .nav-floating {
+                @apply fixed bottom-8 left-1/2 -translate-x-1/2 w-[92%] max-w-md h-20 glass-morphism rounded-[40px] z-[500] flex items-center justify-around px-4;
+                border-top: 1px solid rgba(255,255,255,0.1);
+            }
+            .nav-item-floating {
+                @apply flex flex-col items-center justify-center gap-1.5 text-slate-400 transition-all duration-300 relative w-16 h-16 rounded-3xl;
+            }
+            .nav-item-floating.active {
+                @apply text-primary scale-110 bg-primary/10;
+            }
+            .active-dot {
+                @apply absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full blur-[1px] opacity-0 transition-opacity;
+                box-shadow: 0 0 10px var(--primary);
+            }
+            .nav-item-floating.active .active-dot {
+                @apply opacity-100;
             }
         }
         
@@ -132,6 +152,19 @@
         /* Custom Progress Bar */
         .progress-glow {
             box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+        }
+
+        /* Dark Mode Input Override: White background, Black text as requested */
+        .dark .input-pro {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            border: 2px solid #e2e8f0 !important;
+        }
+        .dark .input-pro:focus {
+            background-color: #f8fafc !important;
+        }
+        .dark .input-pro::placeholder {
+            color: #94a3b8 !important;
         }
     </style>
 </head>
@@ -163,95 +196,88 @@
         </div>
     </div>
 
-    <!-- Background Decoration -->
-    <div
-        class="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full z-[-1] pointer-events-none">
-    </div>
-    <div
-        class="fixed bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-secondary/10 blur-[120px] rounded-full z-[-1] pointer-events-none">
-    </div>
-
     <!-- Header -->
     <header
-        class="fixed top-0 left-0 right-0 z-50 glass-morphism pt-safe px-6 pb-4 flex items-center justify-between transition-all duration-300">
-        <div class="flex items-center gap-4 group">
+        class="fixed top-0 left-0 right-0 z-50 py-6 px-8 flex items-center justify-between glass-morphism border-b-0 rounded-b-[40px]">
+        <div class="flex items-center gap-4">
             <div
-                class="w-12 h-12 bg-gradient-to-tr from-primary to-secondary rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary/30 group-hover:scale-105 transition-transform duration-300">
-                <i data-lucide="sparkles" class="w-7 h-7"></i>
+                class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 relative group">
+                <div
+                    class="absolute inset-0 bg-primary/40 blur-[15px] rounded-full opacity-50 group-hover:opacity-100 transition-opacity">
+                </div>
+                <i data-lucide="zap" class="w-6 h-6 text-white relative z-10"></i>
             </div>
             <div>
-                <h1 class="text-xl font-extrabold tracking-tight" id="headerTitle">Akademiya</h1>
-                <div class="flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold tracking-widest uppercase"
-                        data-i18n="murojaat_bot">Ultimate Pro</p>
-                </div>
+                <h1 class="text-xl font-black font-display tracking-tight text-slate-800 dark:text-white">Academy</h1>
+                <p class="text-[9px] font-black tracking-[0.3em] uppercase text-primary-light">Intelligence v4</p>
             </div>
         </div>
 
-        <div class="flex items-center gap-3">
-            <button id="adminTabBtn" onclick="vibrate('light'); showView('adminDashboardView')"
-                class="hidden w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-600 dark:text-slate-400 active:scale-90 transition-all border border-slate-200 dark:border-white/5">
-                <i data-lucide="shield-check" class="w-6 h-6"></i>
-            </button>
-
-            <div class="relative lang-switcher">
-                <button id="currentLangBtn" onclick="vibrate('light'); toggleLangMenu()"
-                    class="h-12 px-4 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center gap-2 text-sm font-bold active:scale-90 transition-all border border-slate-200 dark:border-white/5">
-                    <span id="currentLang">UZ</span>
-                    <i data-lucide="chevron-down" class="w-4 h-4 opacity-50"></i>
-                </button>
-                <div id="langMenu"
-                    class="hidden absolute top-full right-0 mt-3 w-40 glass-morphism rounded-3xl shadow-2xl border border-white/20 p-2 flex flex-col gap-1 origin-top-right transition-all">
-                    <!-- Languages -->
-                </div>
-            </div>
-        </div>
+        <button onclick="toggleLangMenu()"
+            class="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 flex items-center justify-center group active:scale-90 transition-all">
+            <span id="currentLang" class="font-black text-xs text-slate-600 dark:text-slate-300">UZ</span>
+        </button>
     </header>
 
     <!-- Main Content -->
     <main id="mainContent" class="pt-28 pb-36 px-6 max-w-lg mx-auto min-h-screen">
 
         <!-- HOME -->
-        <section id="homeView" class="view space-y-8">
+        <section id="homeView" class="view space-y-12">
             <div
-                class="card-pro bg-gradient-to-br from-[#4f46e5] to-[#9333ea] text-white border-0 overflow-hidden relative p-8 group">
-                <div class="relative z-10 space-y-4">
+                class="card-pro bg-gradient-to-br from-[#1e1b4b] via-[#4338ca] to-[#6d28d9] text-white border-0 overflow-hidden relative p-12 group min-h-[320px] flex flex-col justify-center">
+                <div class="relative z-10 space-y-8">
                     <div
-                        class="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md">
-                        <i data-lucide="zap" class="w-3 h-3 text-yellow-300"></i>
-                        Akademiya System
+                        class="inline-flex items-center gap-3 px-5 py-2.5 bg-white/10 rounded-full text-[12px] font-black uppercase tracking-widest backdrop-blur-3xl border border-white/20">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-cyan-300 animate-pulse"></i>
+                        <span class="animate-pulse">Next-Gen Interface</span>
                     </div>
-                    <h2 class="text-3xl font-extrabold leading-tight" data-i18n="welcome_title">Xush kelibsiz!</h2>
-                    <p class="text-indigo-100 text-sm font-medium leading-relaxed opacity-90" data-i18n="welcome_text">
-                        Zamonaviy va qulay platforma orqali o'z murojaatingizni yo'llang.</p>
+                    <div class="space-y-4">
+                        <h2 class="text-5xl font-black leading-[1] tracking-tighter" data-i18n="welcome_title">Xush
+                            kelibsiz!</h2>
+                        <p class="text-indigo-100/70 text-lg font-bold leading-relaxed max-w-[280px]"
+                            data-i18n="welcome_text">
+                            Platformamizga xush kelibsiz. Biz bilan yangiliklar olamiga sho'ng'ing.</p>
+                    </div>
                 </div>
-                <!-- Animated background elements -->
+
+                <!-- Advanced Background Elements -->
                 <div
-                    class="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-[60px] group-hover:bg-white/20 transition-all duration-700">
+                    class="absolute -right-20 -top-20 w-96 h-96 bg-primary/30 rounded-full blur-[120px] group-hover:bg-primary/40 transition-all duration-1000 rotate-12">
                 </div>
                 <div
-                    class="absolute right-8 top-8 w-12 h-12 bg-indigo-300/20 rounded-2xl rotate-12 blur-sm group-hover:rotate-45 transition-all duration-700">
+                    class="absolute -left-20 -bottom-20 w-80 h-80 bg-secondary/30 rounded-full blur-[100px] group-hover:bg-secondary/40 transition-all duration-1000 -rotate-12">
+                </div>
+
+                <!-- Particles Decoration -->
+                <div class="absolute inset-0 opacity-10 mix-blend-overlay pointer-events-none"
+                    style="background-image: radial-gradient(circle, white 1px, transparent 1px); background-size: 24px 24px;">
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-5">
+            <div class="grid grid-cols-2 gap-8">
                 <button onclick="vibrate('medium'); showView('complaintView')"
-                    class="card-pro group flex flex-col items-center text-center gap-4 py-8">
+                    class="card-pro group flex flex-col items-center text-center gap-6 py-12 relative overflow-hidden bg-white/5">
                     <div
-                        class="w-16 h-16 rounded-3xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-500 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg shadow-indigo-500/5">
-                        <i data-lucide="message-square" class="w-8 h-8"></i>
+                        class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                     </div>
-                    <p class="font-extrabold text-sm tracking-tight text-slate-700 dark:text-slate-300"
+                    <div
+                        class="w-24 h-24 rounded-[32px] bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-500 group-hover:text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-2xl shadow-indigo-500/20 z-10 border border-white/5">
+                        <i data-lucide="message-circle" class="w-12 h-12"></i>
+                    </div>
+                    <p class="font-black text-lg tracking-tight text-slate-700 dark:text-slate-100 z-10"
                         data-i18n="btn_complaint">Murojaat</p>
                 </button>
                 <button onclick="vibrate('medium'); showView('ratingView')"
-                    class="card-pro group flex flex-col items-center text-center gap-4 py-8">
+                    class="card-pro group flex flex-col items-center text-center gap-6 py-12 relative overflow-hidden bg-white/5">
                     <div
-                        class="w-16 h-16 rounded-3xl bg-pink-50 dark:bg-pink-500/10 flex items-center justify-center text-pink-500 group-hover:bg-pink-500 group-hover:text-white group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500 shadow-lg shadow-pink-500/5">
-                        <i data-lucide="star" class="w-8 h-8"></i>
+                        class="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                     </div>
-                    <p class="font-extrabold text-sm tracking-tight text-slate-700 dark:text-slate-300"
+                    <div
+                        class="w-24 h-24 rounded-[32px] bg-pink-50 dark:bg-pink-500/10 flex items-center justify-center text-pink-500 group-hover:bg-pink-500 group-hover:text-white group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 shadow-2xl shadow-pink-500/20 z-10 border border-white/5">
+                        <i data-lucide="star" class="w-12 h-12"></i>
+                    </div>
+                    <p class="font-black text-lg tracking-tight text-slate-700 dark:text-slate-100 z-10"
                         data-i18n="btn_lesson_rating">Baholash</p>
                 </button>
             </div>
@@ -597,49 +623,21 @@
 
     </main>
 
-    <!-- Bottom Navbar -->
-    <nav
-        class="fixed bottom-0 left-0 right-0 z-50 glass-morphism pb-safe px-8 pt-4 flex items-center justify-between border-t border-white/10">
-        <button onclick="vibrate('light'); showView('homeView')" id="navHome" class="nav-item group relative">
-            <div
-                class="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full opacity-0 group-[.active]:opacity-100 transition-opacity">
-            </div>
-            <i data-lucide="layout-grid"
-                class="w-7 h-7 group-[.active]:text-primary group-[.active]:scale-110 transition-all"></i>
-            <span
-                class="text-[8px] font-black uppercase tracking-widest mt-1 opacity-60 group-[.active]:opacity-100 group-[.active]:text-primary"
-                data-i18n="nav_home">Bosh</span>
-        </button>
-        <button onclick="vibrate('light'); showView('complaintView')" id="navComplaint" class="nav-item group relative">
-            <div
-                class="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full opacity-0 group-[.active]:opacity-100 transition-opacity">
-            </div>
-            <i data-lucide="plus-square"
-                class="w-7 h-7 group-[.active]:text-primary group-[.active]:scale-110 transition-all"></i>
-            <span
-                class="text-[8px] font-black uppercase tracking-widest mt-1 opacity-60 group-[.active]:opacity-100 group-[.active]:text-primary"
-                data-i18n="nav_complaint">Murojaat</span>
-        </button>
-        <button onclick="vibrate('light'); showView('ratingView')" id="navRating" class="nav-item group relative">
-            <div
-                class="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full opacity-0 group-[.active]:opacity-100 transition-opacity">
-            </div>
-            <i data-lucide="star"
-                class="w-7 h-7 group-[.active]:text-primary group-[.active]:scale-110 transition-all"></i>
-            <span
-                class="text-[8px] font-black uppercase tracking-widest mt-1 opacity-60 group-[.active]:opacity-100 group-[.active]:text-primary"
-                data-i18n="nav_rating">Baho</span>
-        </button>
-        <button onclick="vibrate('light'); showView('rulesView')" id="navRules" class="nav-item group relative">
-            <div
-                class="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full opacity-0 group-[.active]:opacity-100 transition-opacity">
-            </div>
-            <i data-lucide="book-open"
-                class="w-7 h-7 group-[.active]:text-primary group-[.active]:scale-110 transition-all"></i>
-            <span
-                class="text-[8px] font-black uppercase tracking-widest mt-1 opacity-60 group-[.active]:opacity-100 group-[.active]:text-primary"
-                data-i18n="nav_rules">Qoidalar</span>
-        </button>
+    <i data-lucide="star" class="w-7 h-7 group-[.active]:text-primary group-[.active]:scale-110 transition-all"></i>
+    <span
+        class="text-[8px] font-black uppercase tracking-widest mt-1 opacity-60 group-[.active]:opacity-100 group-[.active]:text-primary"
+        data-i18n="nav_rating">Baho</span>
+    </button>
+    <button onclick="vibrate('light'); showView('rulesView')" id="navRules" class="nav-item group relative">
+        <div
+            class="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full opacity-0 group-[.active]:opacity-100 transition-opacity">
+        </div>
+        <i data-lucide="book-open"
+            class="w-7 h-7 group-[.active]:text-primary group-[.active]:scale-110 transition-all"></i>
+        <span
+            class="text-[8px] font-black uppercase tracking-widest mt-1 opacity-60 group-[.active]:opacity-100 group-[.active]:text-primary"
+            data-i18n="nav_rules">Qoidalar</span>
+    </button>
     </nav>
 
     <!-- Modal System -->

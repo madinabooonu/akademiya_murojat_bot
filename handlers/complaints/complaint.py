@@ -284,7 +284,7 @@ async def handle_teacher_entry(update: Update, context: ContextTypes.DEFAULT_TYP
         context.user_data['state'] = 'entering_subject'
         return await update.message.reply_text(
             utils.get_text('enter_subject', context),
-            reply_markup=utils.get_back_keyboard(context)
+            reply_markup=get_back_keyboard(context)
         )
 
     context.user_data['teacher_name'] = teacher_name
@@ -296,7 +296,7 @@ async def handle_teacher_entry(update: Update, context: ContextTypes.DEFAULT_TYP
 async def ask_complaint_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Murojaat xabarini so'rash"""
     text = f"📍 {utils.get_text('enter_message', context)}"
-    await update.message.reply_text(text, reply_markup=utils.get_back_keyboard(context), parse_mode='HTML')
+    await update.message.reply_text(text, reply_markup=get_back_keyboard(context), parse_mode='HTML')
 
 
 async def handle_complaint_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -327,7 +327,7 @@ async def handle_complaint_message(update: Update, context: ContextTypes.DEFAULT
 
     await update.message.reply_text(
         confirmation_text,
-        reply_markup=utils.get_main_menu_keyboard(context),
+        reply_markup=get_main_menu_keyboard(context),
         parse_mode='HTML'
     )
 

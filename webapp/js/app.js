@@ -78,12 +78,13 @@ async function fetchConfig() {
 }
 
 function updateNavbar(viewId) {
-    document.querySelectorAll('.nav-item').forEach(btn => {
+    document.querySelectorAll('.nav-item-floating').forEach(btn => {
         btn.classList.remove('active');
         if (btn.id === 'navHome' && viewId === 'homeView') btn.classList.add('active');
         if (btn.id === 'navComplaint' && viewId === 'complaintView') btn.classList.add('active');
         if (btn.id === 'navRating' && viewId === 'ratingView') btn.classList.add('active');
         if (btn.id === 'navRules' && viewId === 'rulesView') btn.classList.add('active');
+        if (btn.id === 'adminTabBtn' && viewId === 'adminDashboardView') btn.classList.add('active');
     });
 }
 
@@ -131,18 +132,31 @@ function showView(viewId, animate = true) {
     });
 
     if (animate && oldView) {
-        gsap.to(oldView, {
+        const tl = gsap.timeline();
+        tl.to(oldView, {
             opacity: 0,
-            y: -20,
-            duration: 0.3,
-            ease: "power2.in",
+            y: -30,
+            scale: 0.95,
+            duration: 0.4,
+            ease: "back.in(1.7)",
             onComplete: () => {
                 oldView.style.display = 'none';
                 newView.style.display = 'block';
+
+                // Entrance with stagger
                 gsap.fromTo(newView,
-                    { opacity: 0, y: 30 },
-                    { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }
+                    { opacity: 0, y: 40, scale: 1.05 },
+                    { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "expo.out" }
                 );
+
+                // Stagger children if any
+                const children = newView.querySelectorAll('.card-pro, .option-pro, .btn-pro, h3, .label-pro');
+                if (children.length) {
+                    gsap.fromTo(children,
+                        { opacity: 0, y: 20 },
+                        { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out", delay: 0.2 }
+                    );
+                }
             }
         });
     } else {
@@ -277,23 +291,33 @@ function renderComplaintStep(step) {
             break;
     }
 
-    // Slide Animation
+    // Slide Animation with high-end feel
     const currentStep = container.querySelector('.step-content');
     if (currentStep) {
         gsap.to(currentStep, {
             opacity: 0,
-            x: -20,
-            duration: 0.3,
+            x: -40,
+            filter: 'blur(10px)',
+            duration: 0.4,
+            ease: "power2.in",
             onComplete: () => {
                 container.innerHTML = '';
                 container.appendChild(stepEl);
-                gsap.fromTo(stepEl, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.4 });
+                gsap.fromTo(stepEl,
+                    { opacity: 0, x: 40, filter: 'blur(10px)' },
+                    { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.6, ease: "expo.out" }
+                );
+
+                // Stagger animations for inputs and buttons within step
+                const els = stepEl.querySelectorAll('h3, .option-pro, .input-pro, .btn-pro, .label-pro');
+                gsap.fromTo(els, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.08, delay: 0.1 });
+
                 if (window.lucide) window.lucide.createIcons();
             }
         });
     } else {
         container.appendChild(stepEl);
-        gsap.fromTo(stepEl, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4 });
+        gsap.fromTo(stepEl, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" });
         if (window.lucide) window.lucide.createIcons();
     }
 }

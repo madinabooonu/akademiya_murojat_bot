@@ -10,7 +10,8 @@ ADMIN_IDS = [int(i.strip()) for i in ADMIN_IDS_STR.split(",") if i.strip()]
 DATABASE_NAME = os.environ.get("DATABASE_PATH", 'education_system.db')
 
 # Mini App URL (HTTPS kerak Telegram uchun)
-WEBAPP_URL = os.environ.get("WEBAPP_URL", None)
+_env_webapp_url = os.environ.get("WEBAPP_URL", "")
+WEBAPP_URL = _env_webapp_url if _env_webapp_url else None
 
 SELECTED_LANGUAGE = 'uz'
 

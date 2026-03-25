@@ -44,7 +44,7 @@ async def show_export_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def generate_progress_bar(count, total, length=10):
-    """Matnli progress bar yaratish"""
+    """Matnli professional progress bar yaratish"""
     if total == 0: return "░" * length
     filled_len = int(round(length * count / float(total)))
     per = round(100.0 * count / float(total), 1)
@@ -52,7 +52,7 @@ def generate_progress_bar(count, total, length=10):
     return f"<code>{bar}</code> {per}%"
 
 async def show_statistics(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Statistikalarni professional ko'rinishda ko'rsatish"""
+    """Statistikalarni professional va chiroyli ko'rinishda ko'rsatish"""
     if not utils.is_admin(update.effective_user.id):
         await update.message.reply_text(utils.get_text('no_permission', context))
         return
@@ -63,40 +63,47 @@ async def show_statistics(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Header
     stats_text = f"{utils.get_text('stats_header_main', context)}\n"
     stats_text += f"{utils.get_text('stats_divider', context)}\n\n"
-    stats_text += f"{utils.get_text('stats_total_line', context).format(total=total)}\n"
+    stats_text += f"{utils.get_text('stats_total_line', context).format(total=total)}\n\n"
 
     import html
-    # Directions
-    if stats['by_direction']:
-        stats_text += f"{utils.get_text('stats_header_directions', context)}\n"
-        for direction, count in stats['by_direction']:
-            bar = generate_progress_bar(count, total)
-            dir_name = html.escape(utils.get_direction_name(direction, context))
-            stats_text += f"• <b>{dir_name}</b>\n  {bar} <code>{count}</code> ta\n"
-
-    # Types
-    if stats['by_type']:
-        stats_text += f"{utils.get_text('stats_header_types', context)}\n"
-        for complaint_type, count in stats['by_type']:
-            bar = generate_progress_bar(count, total)
-            type_name = html.escape(utils.get_complaint_type_name(complaint_type, context))
-            stats_text += f"• <b>{type_name}</b>\n  {bar} <code>{count}</code> ta\n"
-
-    # Courses
-    if stats['by_course']:
-        stats_text += f"{utils.get_text('stats_header_courses', context)}\n"
-        for course, count in stats['by_course']:
-            bar = generate_progress_bar(count, total)
-            crs_name = html.escape(utils.get_course_name(course, context))
-            stats_text += f"• <b>{crs_name}</b>\n  {bar} <code>{count}</code> ta\n"
-
-    # Weekly
-    stats_text += f"{utils.get_text('stats_header_weekly', context)}\n"
-    if stats['weekly']:
-        for date_str, count in stats['weekly']:
-            stats_text += f"🗓 <code>{date_str}</code>: <b>{count} ta</b>\n"
+    
+    if total == 0:
+        stats_text += f"📭 <i>{utils.get_text('no_complaints', context)}</i>\n"
     else:
-        stats_text += f"  {utils.get_text('no_data', context)}\n"
+        # Directions
+        if stats['by_direction']:
+            stats_text += f"{utils.get_text('stats_header_directions', context)}\n"
+            for direction, count in stats['by_direction']:
+                bar_text = generate_progress_bar(count, total)
+                dir_name = html.escape(utils.get_direction_name(direction, context))
+                stats_text += f"• <b>{dir_name}</b>\n  {bar_text} <code>{count}</code> ta\n"
+            stats_text += "\n"
+
+        # Types
+        if stats['by_type']:
+            stats_text += f"{utils.get_text('stats_header_types', context)}\n"
+            for complaint_type, count in stats['by_type']:
+                bar_text = generate_progress_bar(count, total)
+                type_name = html.escape(utils.get_complaint_type_name(complaint_type, context))
+                stats_text += f"• <b>{type_name}</b>\n  {bar_text} <code>{count}</code> ta\n"
+            stats_text += "\n"
+
+        # Courses
+        if stats['by_course']:
+            stats_text += f"{utils.get_text('stats_header_courses', context)}\n"
+            for course, count in stats['by_course']:
+                bar_text = generate_progress_bar(count, total)
+                crs_name = html.escape(utils.get_course_name(course, context))
+                stats_text += f"• <b>{crs_name}</b>\n  {bar_text} <code>{count}</code> ta\n"
+            stats_text += "\n"
+
+        # Weekly
+        stats_text += f"{utils.get_text('stats_header_weekly', context)}\n"
+        if stats['weekly']:
+            for date_str, count in stats['weekly']:
+                stats_text += f"🗓 <code>{date_str}</code>: <b>{count} ta</b>\n"
+        else:
+            stats_text += f"  <i>{utils.get_text('no_data', context)}</i>\n"
 
     stats_text += f"\n{utils.get_text('stats_divider', context)}\n"
     stats_text += f"✨ <i>Hisobot vaqti: {stats.get('now', 'Hozir')}</i>"
