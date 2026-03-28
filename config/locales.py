@@ -139,6 +139,11 @@ LOCALES = {
         'survey_result_link': "📊 So'rovnoma natijalarini ko'rish:\n\n{link}",
         'error_no_survey_type': "❌ Avval so'rovnoma turini tanlang.",
         'error_link_not_found': "❌ Havola topilmadi.",
+        'survey_teachers_title': "O'qituvchilar haqida so'rovnoma",
+        'survey_edu_title': "Ta'lim sifati so'rovnomasi",
+        'survey_emp_title': "Ish beruvchilar so'rovnomasi",
+        'loading': "Yuklanmoqda...",
+        'no_surveys': "Hozircha so'rovnomalar yo'q",
 
          # Lesson Rating
         'rating_intro': "Kunlik darsni baholash bo'limi",
@@ -418,6 +423,11 @@ LOCALES = {
         'survey_result_link': "📊 Посмотреть результаты опроса:\n\n{link}",
         'error_no_survey_type': "❌ Сначала выберите тип опроса.",
         'error_link_not_found': "❌ Ссылка не найдена.",
+        'survey_teachers_title': "Опрос об учителях",
+        'survey_edu_title': "Опрос о качестве образования",
+        'survey_emp_title': "Опрос для работодателей",
+        'loading': "Загрузка...",
+        'no_surveys': "Опросов пока нет",
 
         # Lesson Rating
         'rating_intro': "Раздел ежедневной оценки уроков",
@@ -695,8 +705,13 @@ LOCALES = {
         'survey_edu_text': "🎓 Education Quality Survey\n\nIn this survey, express your opinion about the educational process, curriculum, and quality of education.\n\n🔗 Link: {link}\n\nThe survey is conducted completely anonymously.",
         'survey_emp_text': "💼 Employers Survey\n\nIn this survey, express your opinion about graduates' professional skills and readiness for the labor market.\n\n🔗 Link: {link}\n\nThe survey is conducted completely anonymously.",
         'survey_result_link': "📊 View Survey Results:\n\n{link}",
-        'error_no_survey_type': "❌ First select a survey type.",
+        'error_no_survey_type': "❌ Select survey type first.",
         'error_link_not_found': "❌ Link not found.",
+        'survey_teachers_title': "Teachers Survey",
+        'survey_edu_title': "Education Quality Survey",
+        'survey_emp_title': "Employers Survey",
+        'loading': "Loading...",
+        'no_surveys': "No surveys available",
 
         # Lesson Rating
         'rating_intro': "Daily Lesson Rating Section",

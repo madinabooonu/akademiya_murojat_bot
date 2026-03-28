@@ -101,9 +101,9 @@ DEFAULT_RATING_QUESTIONS = [
 ]
 
 DEFAULT_SURVEY_LINKS = [
-    ('teachers', 'https://docs.google.com/forms/d/e/1FAIpQLScLaVr0ymp9MyuoLj-LAryP0IDyq_lQH98Wh6iXvMOKVJpmxA/viewform?usp=dialog', 'survey_teachers_title', 1),
-    ('education', 'https://docs.google.com/forms/d/e/1FAIpQLSdEXAMPLE1/viewform?usp=dialog', 'survey_edu_title', 1),
-    ('employers', 'https://docs.google.com/forms/d/e/1FAIpQLSdEXAMPLE2/viewform?usp=dialog', 'survey_emp_title', 1),
+    ('teachers', 'https://docs.google.com/forms/d/e/1FAIpQLScLaVr0ymp9MyuoLj-LAryP0IDyq_lQH98Wh6iXvMOKVJpmxA/viewform?usp=dialog', 'btn_survey_teachers', 1),
+    ('education', 'https://docs.google.com/forms/d/e/1FAIpQLSdEXAMPLE1/viewform?usp=dialog', 'btn_survey_edu', 1),
+    ('employers', 'https://docs.google.com/forms/d/e/1FAIpQLSdEXAMPLE2/viewform?usp=dialog', 'btn_survey_emp', 1),
 ]
 
 

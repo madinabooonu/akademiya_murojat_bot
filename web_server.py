@@ -146,8 +146,12 @@ def get_rating_questions_from_db():
 
 def get_survey_links_from_db():
     """So'rovnoma havolalarini olish"""
-    from database_models import get_survey_links_dict
-    return [{'code': k, 'url': v} for k, v in get_survey_links_dict().items()]
+    from database_models import get_all_survey_links
+    surveys = get_all_survey_links()
+    return [
+        {'code': s[0], 'url': s[1], 'translation_key': s[2]} 
+        for s in surveys if s[3] == 1
+    ]
 
 
 # Redundant code removed
