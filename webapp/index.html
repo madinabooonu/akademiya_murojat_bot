@@ -284,51 +284,31 @@
                 <div class="absolute -left-16 -bottom-16 w-64 h-64 bg-secondary/20 rounded-full blur-[80px]"></div>
             </div>
 
-            <!-- KEY ACTIONS GRID -->
+            <!-- MAIN ACTIONS -->
             <div class="grid grid-cols-2 gap-6">
                 <button onclick="vibrate('medium'); showView('complaintView')"
-                    class="card-pro elite-glass p-8 flex flex-col items-center justify-center gap-4 group active:scale-95 transition-all text-center rounded-[32px] border-white/5">
+                    class="card-pro group flex flex-col items-center text-center gap-6 py-10 relative overflow-hidden bg-white/5 rounded-[40px] border border-white/5 active:scale-95 transition-all">
                     <div
-                        class="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white group-hover:rotate-6 transition-all duration-500">
-                        <i data-lucide="message-circle" class="w-8 h-8"></i>
-                    </div>
-                    <span class="font-black text-sm uppercase tracking-tight" data-i18n="btn_complaint">Murojaat</span>
-                </button>
-
-                <button onclick="vibrate('medium'); showView('ratingView')"
-                    class="card-pro elite-glass p-8 flex flex-col items-center justify-center gap-4 group active:scale-95 transition-all text-center rounded-[32px] border-white/5">
-                    <div
-                        class="w-16 h-16 rounded-3xl bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white group-hover:-rotate-6 transition-all duration-500">
-                        <i data-lucide="star" class="w-8 h-8"></i>
-                    </div>
-                    <span class="font-black text-sm uppercase tracking-tight"
-                        data-i18n="btn_lesson_rating">Baholash</span>
-                </button>
-            </div>
-
-            <div class="grid grid-cols-2 gap-8">
-                <button onclick="vibrate('medium'); showView('complaintView')"
-                    class="card-pro group flex flex-col items-center text-center gap-6 py-12 relative overflow-hidden bg-white/5">
-                    <div
-                        class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        class="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                     </div>
                     <div
-                        class="w-24 h-24 rounded-[32px] bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-500 group-hover:text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-2xl shadow-indigo-500/20 z-10 border border-white/5">
-                        <i data-lucide="message-circle" class="w-12 h-12"></i>
+                        class="w-20 h-20 rounded-[30px] bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-2xl shadow-primary/20 z-10 border border-white/5">
+                        <i data-lucide="message-square" class="w-10 h-10"></i>
                     </div>
-                    <p class="font-black text-lg tracking-tight text-slate-700 dark:text-slate-100 z-10"
+                    <p class="font-black text-sm uppercase tracking-widest text-slate-700 dark:text-slate-100 z-10"
                         data-i18n="btn_complaint">Murojaat</p>
                 </button>
+
                 <button onclick="vibrate('medium'); showView('ratingView')"
-                    class="card-pro group flex flex-col items-center text-center gap-6 py-12 relative overflow-hidden bg-white/5">
+                    class="card-pro group flex flex-col items-center text-center gap-6 py-10 relative overflow-hidden bg-white/5 rounded-[40px] border border-white/5 active:scale-95 transition-all">
                     <div
-                        class="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        class="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                     </div>
                     <div
-                        class="w-24 h-24 rounded-[32px] bg-pink-50 dark:bg-pink-500/10 flex items-center justify-center text-pink-500 group-hover:bg-pink-500 group-hover:text-white group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 shadow-2xl shadow-pink-500/20 z-10 border border-white/5">
-                        <i data-lucide="star" class="w-12 h-12"></i>
+                        class="w-20 h-20 rounded-[30px] bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 shadow-2xl shadow-secondary/20 z-10 border border-white/5">
+                        <i data-lucide="star" class="w-10 h-10"></i>
                     </div>
-                    <p class="font-black text-lg tracking-tight text-slate-700 dark:text-slate-100 z-10"
+                    <p class="font-black text-sm uppercase tracking-widest text-slate-700 dark:text-slate-100 z-10"
                         data-i18n="btn_lesson_rating">Baholash</p>
                 </button>
             </div>

@@ -227,7 +227,8 @@ def save_lesson_rating(data):
 
     uid = generate_uid()
     # Handle both 'answers' (bot) and 'ratings' (webapp)
-    answers = data.get('answers', data.get('ratings', {}))
+    answers = data.get('answers', data.get('ratings', data))
+    telegram_id = data.get('telegram_id', data.get('user_id'))
     
     # Fakultetni topish (Yo'nalish kodiga qarab)
     faculty_code = ""
@@ -240,12 +241,16 @@ def save_lesson_rating(data):
 
     # Umumiy ballni hisoblash (Faqat raqamli javoblar uchun)
     scores = []
-    for val in answers.values():
-        try:
-            if str(val).isdigit():
-                scores.append(float(val))
-        except (ValueError, TypeError):
-            pass
+    # Check both integer and string keys for 1-10, plus 'q1'-'q10'
+    for i in range(1, 11):
+        for key in [i, str(i), f'q{i}']:
+            val = answers.get(key)
+            if val is not None:
+                try:
+                    if str(val).isdigit():
+                        scores.append(float(val))
+                        break # Found for this question
+                except: pass
     total_score = round(sum(scores)/len(scores), 2) if scores else 0
 
     cursor.execute('''
@@ -270,9 +275,16 @@ def save_lesson_rating(data):
         data.get('teacher_name', ''),
         json.dumps(answers),
         data.get('comment', ''),
-        str(answers.get(1, '')), str(answers.get(2, '')), str(answers.get(3, '')), 
-        str(answers.get(4, '')), str(answers.get(5, '')), str(answers.get(6, '')),
-        str(answers.get(7, '')), str(answers.get(8, '')), str(answers.get(9, '')), str(answers.get(10, '')),
+        str(answers.get('1', answers.get(1, answers.get('q1', '')))),
+        str(answers.get('2', answers.get(2, answers.get('q2', '')))),
+        str(answers.get('3', answers.get(3, answers.get('q3', '')))),
+        str(answers.get('4', answers.get(4, answers.get('q4', '')))),
+        str(answers.get('5', answers.get(5, answers.get('q5', '')))),
+        str(answers.get('6', answers.get(6, answers.get('q6', '')))),
+        str(answers.get('7', answers.get(7, answers.get('q7', '')))),
+        str(answers.get('8', answers.get(8, answers.get('q8', '')))),
+        str(answers.get('9', answers.get(9, answers.get('q9', '')))),
+        str(answers.get('10', answers.get(10, answers.get('q10', '')))),
         total_score,
         'new',
         data.get('source', 'bot')
