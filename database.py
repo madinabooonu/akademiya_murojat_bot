@@ -265,7 +265,7 @@ def save_lesson_rating(data):
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         uid,
-        data.get('telegram_id'),
+        telegram_id,
         data.get('faculty', faculty_code),
         data['direction'],
         data['course'],
