@@ -66,8 +66,8 @@ function updateContent() {
 }
 
 function t(key) {
-    const lang = tg?.initDataUnsafe?.user?.language_code || 'uz';
-    return state.config.locales?.[lang]?.[key] || state.config.locales?.['uz']?.[key] || key;
+    if (!key) return '';
+    return state.config.translations?.[key] || key;
 }
 
 /**
@@ -474,13 +474,52 @@ function resetForm() {
 function renderRulesList() {
     const list = document.getElementById('rulesList');
     list.innerHTML = '';
-    // Rules logic...
+
+    const rules = [
+        { id: 'rules', title: 'btn_rules', icon: 'shield-check' },
+        { id: 'grading', title: 'btn_grading', icon: 'award' },
+        { id: 'exam', title: 'btn_exam', icon: 'file-text' }
+    ];
+
+    rules.forEach(rule => {
+        const pdfFile = state.config.pdf_files?.[rule.id];
+        appendProOption(list, t(rule.title), rule.icon, () => {
+            if (pdfFile) {
+                tg?.openLink(`${API_BASE}/${pdfFile}`);
+            } else {
+                tg?.showAlert(t('error_unknown'));
+            }
+        });
+    });
 }
 
-function renderSurveyList() {
+async function renderSurveyList() {
     const list = document.getElementById('surveyList');
-    list.innerHTML = '';
-    // Survey logic...
+    list.innerHTML = `<div class="p-8 text-center text-slate-500">${t('loading')}</div>`;
+
+    try {
+        const resp = await fetch(`${API_BASE}/api/surveys`);
+        const data = await resp.json();
+        list.innerHTML = '';
+
+        if (data.surveys?.length) {
+            data.surveys.forEach(s => {
+                let icon = 'external-link';
+                if (s.code === 'teachers') icon = 'user-check';
+                else if (s.code === 'education') icon = 'book';
+                else if (s.code === 'employers') icon = 'briefcase';
+
+                const label = t(s.translation_key) || s.code || 'Survey';
+                appendProOption(list, label, icon, () => {
+                    tg?.openLink(s.url);
+                });
+            });
+        } else {
+            list.innerHTML = `<div class="p-12 text-center text-slate-500 font-medium">${t('no_surveys')}</div>`;
+        }
+    } catch (e) {
+        list.innerHTML = `<div class="p-12 text-center text-red-400 font-medium">${t('error_unknown')}</div>`;
+    }
 }
 
 function loadAdminStats() {
